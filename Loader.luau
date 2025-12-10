@@ -1,0 +1,1 @@
+getgenv().diddy = 1
