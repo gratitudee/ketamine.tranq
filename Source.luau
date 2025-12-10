@@ -14,7 +14,9 @@ function Globals:Load()
 	for _, Module in pairs(Modules) do
 		local Success = SecureSpawn(Module.Load, Module)
 		if not Success then
+			DebugNotify("Failed to load, Unloading.")
 			Globals:Unload()
+			break
 		end
 	end
 end
