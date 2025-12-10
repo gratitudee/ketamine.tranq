@@ -27,6 +27,7 @@ function Globals:Unload()
 	end
 
 	for _, UnloadCallback in pairs(self.UnloadCallbacks) do
+		print(UnloadCallback)
 		SecureSpawn(UnloadCallback)
 	end
 
