@@ -1,0 +1,3 @@
+local Cheat = {}
+
+return Cheat

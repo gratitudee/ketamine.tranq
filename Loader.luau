@@ -30,6 +30,7 @@ getgenv().Import = function(ModulePath)
 	end
 
 	local Chunk = loadstring(Response.Body)
+	print(Chunk)
 	return Chunk()
 end
 
