@@ -53,7 +53,6 @@ return function(LaunchOptions: {
 	StealthMode: boolean,
 })
 	if Ketamine and Ketamine.Loaded then
-		Ketamine.Loaded = false
 		DebugNotify("Failed to load, already loaded.")
 		return
 	end
