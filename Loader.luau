@@ -29,8 +29,7 @@ getgenv().Import = function(ModulePath)
 		return nil
 	end
 
-	local Chunk = loadstring(Response.Body)
-	print(Chunk)
+	local Chunk = SecureCall(loadstring, Response.Body)
 	return Chunk()
 end
 
