@@ -30,7 +30,6 @@ getgenv().Import = function(ModulePath)
 	end
 
 	local Function = loadstring(Response.Body)
-	print(Function)
 	return Function and typeof(Function) == "function" and Function() or nil
 end
 
