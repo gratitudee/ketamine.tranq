@@ -12,7 +12,10 @@ local Globals = {
 
 function Globals:Load()
 	for _, Module in pairs(Modules) do
-		SecureSpawn(Module.Load, Module)
+		local Success = SecureSpawn(Module.Load, Module)
+		if not Success then
+			Globals:Unload()
+		end
 	end
 end
 
