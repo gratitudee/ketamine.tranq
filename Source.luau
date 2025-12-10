@@ -29,6 +29,8 @@ function Globals:Unload()
 	for _, UnloadCallback in pairs(self.UnloadCallbacks) do
 		SecureSpawn(UnloadCallback)
 	end
+
+	getgenv().Globals = nil
 end
 
 function Globals:OnUnload(Callback)
