@@ -86,7 +86,7 @@ local Tooltips = {}
 
 -- https://github.com/deividcomsono/Obsidian/blob/main/Library.lua#L30
 -- "https://raw.githubusercontent.com/mstudio45/LinoriaLib/refs/heads/main/"
-local BaseURL = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/refs/heads/main/"
+local BaseURL = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/" -- only doing this because i don't want the repo above to disappear magically one day and im left w/o this.
 local CustomImageManager = {}
 local CustomImageManagerAssets = {
 	Cursor = {
