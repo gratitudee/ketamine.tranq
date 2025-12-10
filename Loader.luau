@@ -51,10 +51,11 @@ end
 return function(LaunchOptions: {
 	StealthMode: boolean,
 })
-	if Ketamine.Loaded then
+	if Ketamine and Ketamine.Loaded then
 		DebugNotify("Failed to load, already loaded.")
 		return
 	end
+
 	getgenv().Ketamine = {
 		Loaded = true,
 		StealthMode = LaunchOptions.StealthMode,
