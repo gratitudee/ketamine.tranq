@@ -29,8 +29,9 @@ getgenv().Import = function(ModulePath)
 		return nil
 	end
 
-	local Chunk = SecureCall(loadstring, Response.Body)
-	return Chunk()
+	local Function = loadstring(Response.Body)
+	print(Function)
+	return Function and typeof(Function) == "function" and Function() or nil
 end
 
 getgenv().DebugNotify = function(Message)
@@ -52,13 +53,14 @@ return function(LaunchOptions: {
 	StealthMode: boolean,
 })
 	if Ketamine and Ketamine.Loaded then
+		Ketamine.Loaded = false
 		DebugNotify("Failed to load, already loaded.")
 		return
 	end
 
 	getgenv().Ketamine = {
 		Loaded = true,
-		StealthMode = LaunchOptions.StealthMode,
+		StealthMode = LaunchOptions and LaunchOptions.StealthMode or false,
 		Interface = {
 			Library = Import("Packages/Library.luau"),
 			SaveManager = Import("Packages/SaveManager.luau"),
@@ -71,9 +73,9 @@ return function(LaunchOptions: {
 		},
 	}
 
-	local Cheat = Import("Cheat.luau")
-	Cheat:Start()
-	Cheat:OnUnload(function()
+	local Source = Import("Source.luau")
+	Source:Load()
+	Source:OnUnload(function()
 		Ketamine.Loaded = false
 		getgenv().Ketamine = nil
 	end)
