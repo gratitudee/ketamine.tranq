@@ -171,11 +171,13 @@ function Globals:Load()
 		end
 	end
 
-	local Success, R = SecureCall(Globals.SetupMenu, Globals)
-	if not Success then
-		Globals:Unload()
-		return
-	end
+	task.delay(1, function()
+		local Success, R = SecureCall(Globals.SetupMenu, Globals)
+		if not Success then
+			Globals:Unload()
+			return
+		end
+	end)
 end
 
 function Globals:Unload()
