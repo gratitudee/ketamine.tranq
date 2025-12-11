@@ -245,7 +245,7 @@ function Entity:Load()
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
 				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
 				EntityObject._LastUpdate = Now
-			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 1000 then
+			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 100 then
 				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
