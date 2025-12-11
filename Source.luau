@@ -1,4 +1,6 @@
--- Setup for Globals and Menu
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
 local Toggles = Interface.Library.Toggles
@@ -24,7 +26,50 @@ function Globals:SetupMenu()
 		Configuration = Window:AddTab("Configuration"),
 	}
 
+	local Watermark = {
+		Enabled = false,
+		FrameTimer = tick(),
+		FrameCounter = 0,
+		FPS = 60,
+		GetPing = function()
+			return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+		end,
+		Connection = nil,
+	}
+
+	Watermark.Connection = RunService.Heartbeat:Connect(function(a0: number)
+		if not Watermark.Enabled then
+			return
+		end
+
+		Watermark.FrameCounter += 1
+
+		local Now = tick()
+		if (Now - Watermark.FrameTimer) >= 1 then
+			Watermark.FPS = Watermark.FrameCounter
+			Watermark.FrameTimer = Now
+			Watermark.FrameCounter = 0
+		end
+
+		local Success, Ping = SecureCall(function(...): ...any
+			return Watermark.GetPing()
+		end)
+
+		if Success and Ping then
+			Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps | {Ping} ms`)
+		else
+			Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps`)
+		end
+	end)
+
 	local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+	SettingsGroup:AddToggle("ShowWatermark", {
+		Default = Watermark.Enabled,
+		Text = "Show Watermark",
+		Callback = function(value)
+			Watermark.Enabled = value
+		end,
+	})
 	SettingsGroup:AddToggle("KeybindMenuOpen", {
 		Default = Interface.Library.KeybindFrame.Visible,
 		Text = "Open Keybind Menu",
@@ -48,6 +93,14 @@ function Globals:SetupMenu()
 	end)
 	Interface.Library.ToggleKeybind = Options.MenuKeybind
 	Interface.Library:OnUnload(function()
+		if
+			Watermark.Connection
+			and typeof(Watermark.Connection) == "RBXScriptConnection"
+			and Watermark.Connection.Connected
+		then
+			Watermark.Connection:Disconnect()
+			Watermark.Connection = nil
+		end
 		Interface.Library.Unloaded = true
 	end)
 
