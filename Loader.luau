@@ -78,5 +78,7 @@ return function(LaunchOptions: {
 		getgenv().Ketamine = nil
 	end)
 
-	Source:Load()
+	task.delay(1, function()
+		Source:Load()
+	end)
 end
