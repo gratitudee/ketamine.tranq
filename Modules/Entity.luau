@@ -249,6 +249,8 @@ function Entity:Load()
 				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
+
+			print(EntityObject.Position, EntityObject.Velocity, EntityObject.Name)
 		end
 	end)
 end
