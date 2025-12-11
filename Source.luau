@@ -62,9 +62,8 @@ function Globals:SetupMenu()
 end
 
 function Globals:Load()
-	print("Loading modules")
 	for _, Module in pairs(Modules) do
-		local Success, Error = SecureCall(Module.Load, Module)
+		local Success, _ = SecureCall(Module.Load, Module)
 		if not Success then
 			DebugNotify("Failed to load, Unloading.")
 			Globals:Unload()
@@ -74,20 +73,17 @@ function Globals:Load()
 
 	local Success, R = SecureCall(Globals.SetupMenu, Globals)
 	if not Success then
-		print(Success, R)
 		Globals:Unload()
 		return
 	end
 end
 
 function Globals:Unload()
-	print("Unloading")
 	for _, Module in pairs(Modules) do
 		SecureSpawn(Module.Unload, Module)
 	end
 
 	for _, UnloadCallback in pairs(self.UnloadCallbacks) do
-		print("Executing callback")
 		SecureSpawn(UnloadCallback)
 	end
 
@@ -95,7 +91,6 @@ function Globals:Unload()
 end
 
 function Globals:OnUnload(Callback)
-	print("Registering callback.")
 	table.insert(Globals.UnloadCallbacks, Callback)
 end
 
