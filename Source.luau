@@ -1,9 +1,6 @@
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
-local Libraries = {
-	UI = Interface.Library,
-	SaveManager = Interface.SaveManager,
-	ThemeManager = Interface.ThemeManager,
-}
+local Options = Interface.Library.Options
+local Toggles = Interface.Library.Toggles
 
 local Globals = {
 	Connections = {},
@@ -46,7 +43,6 @@ function Globals:SetupMenu()
 		Interface.Library:Unload()
 	end)
 	Interface.Library.ToggleKeybind = Options.MenuKeybind
-
 	Interface.Library:OnUnload(function()
 		Interface.Library.Unloaded = true
 	end)
