@@ -1,4 +1,40 @@
 local Players = game:GetService("Players")
+local DefaultSkeletons = {
+	["R6"] = {
+		{ "Head", "Torso" },
+		{ "Torso", "Left Arm" },
+		{ "Torso", "Right Arm" },
+		{ "Torso", "Left Leg" },
+		{ "Torso", "Right Leg" },
+	},
+	["R15"] = {
+		{ "Head", "UpperTorso" },
+		{ "UpperTorso", "LowerTorso" },
+		{ "LowerTorso", "HumanoidRootPart" },
+		{ "UpperTorso", "LeftUpperArm" },
+		{ "LeftUpperArm", "LeftLowerArm" },
+		{ "LeftLowerArm", "LeftHand" },
+		{ "UpperTorso", "RightUpperArm" },
+		{ "RightUpperArm", "RightLowerArm" },
+		{ "RightLowerArm", "RightHand" },
+		{ "LowerTorso", "LeftUpperLeg" },
+		{ "LeftUpperLeg", "LeftLowerLeg" },
+		{ "LeftLowerLeg", "LeftFoot" },
+		{ "LowerTorso", "RightUpperLeg" },
+		{ "RightUpperLeg", "RightLowerLeg" },
+		{ "RightLowerLeg", "RightFoot" },
+	},
+}
+
+local function GetRigType(character)
+	if character:FindFirstChild("UpperTorso") then
+		return "R15"
+	elseif character:FindFirstChild("Torso") then
+		return "R6"
+	end
+	return "Unknown"
+end
+
 local Entity = {
 	Entities = {},
 }
