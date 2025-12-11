@@ -173,7 +173,7 @@ function Entity:Register(Character, Data)
 	}
 
 	if Data.Player then
-		EntityData._Connections = EntityData.Player.CharacterAdded:Connect(function(Character: Model)
+		EntityData._Connections.CharacterAdded = EntityData.Player.CharacterAdded:Connect(function(Character: Model)
 			task.delay(0.5, function()
 				local NewRigType = GetRigType(Character)
 				EntityData.Character = Character
