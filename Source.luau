@@ -41,7 +41,7 @@ function Globals:SetupMenu()
 	})
 	SettingsGroup:AddDivider()
 	SettingsGroup:AddLabel("Menu bind")
-		:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+		:AddKeyPicker("MenuKeybind", { Default = "Z", NoUI = true, Text = "Menu keybind" })
 
 	SettingsGroup:AddButton("Unload", function()
 		Globals:Unload()
