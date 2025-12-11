@@ -297,4 +297,5 @@ function Entity:Unload()
 	end
 end
 
+getgenv().Entity = Entity
 return Entity
