@@ -101,7 +101,6 @@ local Entity = {
 }
 
 function Entity:_UpdateEntity(EntityObject)
-	EntityObject._LastUpdate = tick()
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
 
@@ -244,10 +243,10 @@ function Entity:Load()
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Entity.Entities) do
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				SecureSpawn(Entity._UpdateEntity, EntityObject)
+				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
 				EntityObject._LastUpdate = Now
 			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 1000 then
-				SecureSpawn(Entity._UpdateEntity, EntityObject)
+				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
 		end
