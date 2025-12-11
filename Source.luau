@@ -27,8 +27,8 @@ function Globals:SetupMenu()
 	}
 
 	-- Misc / Playertab 😀
-	local PlayersGroupbox = Tabs.Miscellaneous:AddLeftGroupbox()
-	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox()
+	local PlayersGroupbox = Tabs.Miscellaneous:AddLeftGroupbox("Players")
+	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox("Teams")
 
 	PlayersGroupbox:AddDropdown("EntityDropdown", {
 		Values = { "_" },
