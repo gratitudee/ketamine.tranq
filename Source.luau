@@ -29,7 +29,6 @@ function Globals:SetupMenu()
 	SettingsGroup:AddButton("Unload", function()
 		print("Unload button pressed")
 		Globals:Unload()
-		Interface.Library:Unload()
 	end)
 
 	Interface.Library.ToggleKeybind = Options.MenuKeybind
