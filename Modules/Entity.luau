@@ -98,6 +98,10 @@ end
 local Entity = {
 	Entities = {},
 	Connections = {},
+	Callbacks = {
+		Added = {},
+		Removed = {},
+	},
 }
 
 function Entity:_UpdateEntity(EntityObject)
@@ -187,10 +191,12 @@ function Entity:Register(Character, Data)
 	end
 
 	Entity.Entities[Character] = EntityData
+	Entity:OnChanged(Entity.Entities[Character], "Added")
 	return true
 end
 
 function Entity:Unregister(Key)
+	Entity:OnChanged(Entity.Entities[Key], "Removed")
 	local Existing = Entity.Entities[Key]
 	if not Existing then
 		return
@@ -202,6 +208,30 @@ function Entity:Unregister(Key)
 			Connection = nil
 		end)
 	end
+end
+
+function Entity:OnChanged(Player, State)
+	if Player.Name == LocalPlayer.Name then
+		return
+	end
+
+	if State == "Added" then
+		for _, AddedCallback in pairs(Entity.Callbacks.Added) do
+			AddedCallback(Player)
+		end
+	elseif State == "Removed" then
+		for _, RemovedCallback in pairs(Entity.Callbacks.Removed) do
+			RemovedCallback(Player)
+		end
+	end
+end
+
+function Entity:OnEntityAdded(Callback)
+	table.insert(Entity.Callbacks.Added, Callback)
+end
+
+function Entity:OnEntityRemoved(Callback)
+	table.insert(Entity.Callbacks.Removed, Callback)
 end
 
 function Entity:Load()
@@ -254,6 +284,14 @@ function Entity:Load()
 end
 
 function Entity:Unload()
+	for _, Callback in pairs(Entity.Callbacks.Added) do
+		Callback = nil
+	end
+
+	for _, Callback in pairs(Entity.Callbacks.Removed) do
+		Callback = nil
+	end
+
 	for Registered, _ in pairs(Entity.Entities) do
 		Entity:Unregister(Registered)
 	end

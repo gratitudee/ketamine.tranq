@@ -36,11 +36,21 @@ function Globals:SetupMenu()
 	local PlayersGroupbox = Tabs.Miscellaneous:AddLeftGroupbox("Players")
 	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox("Teams")
 
-	PlayersGroupbox:AddDropdown("EntityDropdown", {
-		Values = { "_" },
+	local Dropdown = PlayersGroupbox:AddDropdown("EntityDropdown", {
+		Values = {},
 		Text = "Players",
+		Searchable = true,
 		AllowNull = true,
 	})
+
+	Entity:OnEntityAdded(function(Player)
+		Dropdown:AddValues(Player.Name)
+	end)
+
+	Entity:OnEntityRemoved(function(Player)
+		local Values = Dropdown.Values
+		table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
+	end)
 
 	TeamsGroupbox:AddDropdown("TeamDropdown", {
 		SpecialType = "Team",
