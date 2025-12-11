@@ -44,10 +44,12 @@ function Globals:SetupMenu()
 	})
 
 	Entity:OnEntityAdded(function(Player)
+		print(`added {Player.Name}`)
 		Dropdown:AddValues(Player.Name)
 	end)
 
 	Entity:OnEntityRemoved(function(Player)
+		print(`removed {Player.Name}`)
 		local Values = Dropdown.Values
 		table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
 	end)
