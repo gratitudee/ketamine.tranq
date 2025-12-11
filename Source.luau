@@ -10,6 +10,58 @@ local Globals = {
 	UnloadCallbacks = {},
 }
 
+function Globals:SetupMenu()
+	local Window = Interface.Library:CreateWindow({
+		Title = "KETAMINE.TRANQ",
+	})
+
+	local Tabs = {
+		Aimbot = Window:AddTab("Assist"),
+		Visuals = Window:AddTab("Visuals"),
+		Miscellaneous = Window:AddTab("Miscellaneous"),
+		Settings = Window:AddTab("Settings"),
+		Configuration = Window:AddTab("Configuration"),
+	}
+
+	-- Settings
+	local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+	SettingsGroup:AddToggle("KeybindMenuOpen", {
+		Default = Interface.Library.KeybindFrame.Visible,
+		Text = "Open Keybind Menu",
+		Callback = function(value)
+			Interface.Library.KeybindFrame.Visible = value
+		end,
+	})
+	SettingsGroup:AddToggle("ShowCustomCursor", {
+		Text = "Custom Cursor",
+		Default = true,
+		Callback = function(Value)
+			Interface.Library.ShowCustomCursor = Value
+		end,
+	})
+	SettingsGroup:AddDivider()
+	SettingsGroup:AddLabel("Menu bind")
+		:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+	SettingsGroup:AddButton("Unload", function()
+		Interface.Library:Unload()
+	end)
+	Interface.Library.ToggleKeybind = Options.MenuKeybind
+
+	Interface.Library:OnUnload(function()
+		Interface.Library.Unloaded = true
+	end)
+
+	-- Configuration
+	Interface.SaveManager:SetLibrary(Interface.Library)
+	Interface.ThemeManager:SetLibrary(Interface.Library)
+	Interface.SaveManager:IgnoreThemeSettings()
+	ThemeManager:SetFolder("ketamine.tranq")
+	SaveManager:SetFolder("ketamine.tranq")
+	SaveManager:BuildConfigSection(Tabs.Configuration)
+	ThemeManager:ApplyToTab(Tabs.Configuration)
+	SaveManager:LoadAutoloadConfig()
+end
+
 function Globals:Load()
 	for _, Module in pairs(Modules) do
 		local Success = SecureSpawn(Module.Load, Module)
@@ -19,6 +71,8 @@ function Globals:Load()
 			break
 		end
 	end
+
+	SecureCall(Globals.SetupMenu, Globals)
 end
 
 function Globals:Unload()
@@ -35,7 +89,6 @@ end
 
 function Globals:OnUnload(Callback)
 	table.insert(Globals.UnloadCallbacks, Callback)
-	print("Registed a callback")
 end
 
 getgenv().Globals = Globals

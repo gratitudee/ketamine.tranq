@@ -73,7 +73,7 @@ return function(LaunchOptions: {
 
 	local Source = Import("Source.luau")
 	Source:OnUnload(function()
-		print("ran!")
+		Ketamine.Interface.Library:Unload()
 		Ketamine.Loaded = false
 		getgenv().Ketamine = nil
 	end)
