@@ -1,6 +1,8 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Cheat = require("./Cheat")
+
+local LocalPlayer = Players.LocalPlayer
+
 local DefaultSkeletons = {
 	["R6"] = {
 		{ "Head", "Torso" },
@@ -124,7 +126,26 @@ function Entity:_UpdateEntity(EntityObject)
 		end
 	end
 
+	if EntityObject.Team == "Neutral" then
+		EntityObject.IsEnemy = true
+	else
+		EntityObject.IsEnemy = (self.Team ~= Entity:GetLocalPlayer().Team)
+	end
+
 	SecureSpawn(EntityObject.CustomUpdate, EntityObject)
+end
+
+function Entity:GetLocalPlayer()
+	local Character = LocalPlayer.Character
+	return Entity.Entities[LocalPlayer.Name]
+		or Entity:Register(LocalPlayer.Name, {
+			Player = LocalPlayer,
+			Character = Character or nil,
+			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
+			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
+			Name = LocalPlayer.Name,
+			DisplayName = LocalPlayer.DisplayName,
+		})
 end
 
 function Entity:Register(Character, Data)
@@ -186,23 +207,7 @@ end
 
 function Entity:Load()
 	for _, Player in pairs(Players:GetPlayers()) do
-		if Player ~= Players.LocalPlayer then
-			SecureCall(function(...): ...any
-				local Character = Player.Character
-				Entity:Register(Player.Name, {
-					Player = Player,
-					Character = Character or nil,
-					PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-					Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-					Name = Player.Name,
-					DisplayName = Player.DisplayName,
-				})
-			end)
-		end
-	end
-
-	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
-		if Player ~= Players.LocalPlayer then
+		SecureCall(function(...): ...any
 			local Character = Player.Character
 			Entity:Register(Player.Name, {
 				Player = Player,
@@ -212,7 +217,19 @@ function Entity:Load()
 				Name = Player.Name,
 				DisplayName = Player.DisplayName,
 			})
-		end
+		end)
+	end
+
+	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
+		local Character = Player.Character
+		Entity:Register(Player.Name, {
+			Player = Player,
+			Character = Character or nil,
+			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
+			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
+			Name = Player.Name,
+			DisplayName = Player.DisplayName,
+		})
 	end)
 
 	Cheat:Connect(Players.PlayerRemoving, function(Player: Player, a1: Enum.PlayerExitReason)
@@ -225,6 +242,8 @@ function Entity:Load()
 			if (Now - EntityObject._LastUpdate * 1000) >= Globals.Flags.EntityCacheUpdate * 1000 then
 				SecureSpawn(Entity._UpdateEntity, EntityObject)
 				EntityObject._LastUpdate = Now
+
+				print(EntityObject.Position, EntityObject.Velocity, EntityObject.Health)
 			end
 		end
 	end)
