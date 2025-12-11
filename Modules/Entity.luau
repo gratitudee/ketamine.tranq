@@ -219,7 +219,7 @@ function Entity:Load()
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Entity.Entities) do
 			if (Now - EntityObject._LastUpdate * 1000) >= Globals.Flags.EntityCacheUpdate * 1000 then
-				Entity:_UpdateEntity(EntityObject)
+				SecureSpawn(Entity._UpdateEntity, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
 		end
