@@ -35,7 +35,7 @@ function Globals:Unload()
 end
 
 function Globals:OnUnload(Callback)
-	table.insert(self.UnloadCallbacks, Callback)
+	table.insert(Globals.UnloadCallbacks, Callback)
 end
 
 getgenv().Globals = Globals
