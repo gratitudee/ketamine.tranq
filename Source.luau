@@ -1,5 +1,6 @@
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
+local Cheat = require("./Modules/Cheat")
 
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
@@ -16,7 +17,8 @@ local Globals = {
 	},
 }
 
-function Globals:SetupMenu()
+-- Internal Functions
+local function BuildMenu()
 	local Window = Interface.Library:CreateWindow({
 		Title = "ketamine.tranq",
 		Center = true,
@@ -32,136 +34,125 @@ function Globals:SetupMenu()
 		Configuration = Window:AddTab("Configuration"),
 	}
 
-	-- Misc / Playertab 😀
-	local PlayersGroupbox = Tabs.Miscellaneous:AddLeftGroupbox("Players")
-	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox("Teams")
+	local function MiscTab()
+		local PlayerGroupBox = Tabs.Miscellaneous:AddLeftGroupbox("Players")
+		local TeamGroupbox = Tabs.Miscellaneous:AddRightGroupbox("Teams")
 
-	local Dropdown = PlayersGroupbox:AddDropdown("EntityDropdown", {
-		Values = {},
-		Text = "Players",
-		Searchable = true,
-		AllowNull = true,
-	})
+		PlayerGroupBox:AddDropdown("EntityDropdown", {
+			Values = {},
+			Text = "Players",
+			Searchable = true,
+			AllowNull = true,
+		})
 
-	Entity:OnEntityAdded(function(Player)
-		Options.EntityDropdown:AddValues(Player.Name)
-	end)
+		TeamGroupbox:AddDropdown("TeamDropdown", {
+			SpecialType = "Team",
+			Text = "Teams",
+			Searchable = true,
+			AllowNull = true,
+		})
 
-	Entity:OnEntityRemoved(function(Player)
-		local Values = Dropdown.Values
-		table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
-		Options.EntityDropdown:SetValues(Values)
-	end)
-
-	TeamsGroupbox:AddDropdown("TeamDropdown", {
-		SpecialType = "Team",
-		Text = "Teams",
-		AllowNull = true,
-	})
-
-	-- Settings and stuff
-	local CheatSettings = Tabs.Settings:AddRightGroupbox("Settings")
-	CheatSettings:AddSlider("EntityCacheUpdate", {
-		Text = "Entity Cache Update Time (ms)",
-		Default = 1,
-		Min = 1,
-		Max = 10,
-		Rounding = 1,
-		Compact = false,
-
-		Callback = function(value)
-			Globals.Flags.Settings.EntityCacheUpdate = value
-		end,
-	})
-
-	local Watermark = {
-		Enabled = false,
-		FrameTimer = tick(),
-		FrameCounter = 0,
-		FPS = 60,
-		GetPing = function()
-			return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-		end,
-		Connection = nil,
-	}
-
-	Watermark.Connection = RunService.Heartbeat:Connect(function(a0: number)
-		if not Watermark.Enabled then
-			return
-		end
-
-		Watermark.FrameCounter += 1
-
-		local Now = tick()
-		if (Now - Watermark.FrameTimer) >= 1 then
-			Watermark.FPS = Watermark.FrameCounter
-			Watermark.FrameTimer = Now
-			Watermark.FrameCounter = 0
-		end
-
-		local Success, Ping = SecureCall(function(...): ...any
-			return Watermark.GetPing()
+		Modules.Entity:OnEntityAdded(function(Player)
+			local Values = Options.EntityDropdown.Values
+			table.insert(Values, Player.Name)
+			Options.EntityDropdown:SetValues(Values)
 		end)
 
-		if Success and Ping then
-			Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps | {Ping} ms`)
-		else
-			Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps`)
-		end
-	end)
+		Modules.Entity:OnEntityRemoved(function(Player)
+			local Values = Options.EntityDropdown.Values
+			table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
+			Options.EntityDropdown:SetValues(Values)
+		end)
+	end
 
-	local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
-	SettingsGroup:AddToggle("ShowWatermark", {
-		Default = Watermark.Enabled,
-		Text = "Show Watermark",
-		Callback = function(value)
-			Watermark.Enabled = value
-		end,
-	})
-	SettingsGroup:AddToggle("KeybindMenuOpen", {
-		Default = Interface.Library.KeybindFrame.Visible,
-		Text = "Open Keybind Menu",
-		Callback = function(value)
-			Interface.Library.KeybindFrame.Visible = value
-		end,
-	})
-	SettingsGroup:AddToggle("ShowCustomCursor", {
-		Text = "Custom Cursor",
-		Default = true,
-		Callback = function(Value)
-			Interface.Library.ShowCustomCursor = Value
-		end,
-	})
-	SettingsGroup:AddDivider()
-	SettingsGroup:AddLabel("Menu bind")
-		:AddKeyPicker("MenuKeybind", { Default = "Z", NoUI = true, Text = "Menu keybind" })
+	local function SettingsTab()
+		local Watermark = {
+			Enabled = false,
+			FrameTimer = tick(),
+			FrameCounter = 0,
+			FPS = 60,
+			GetPing = function()
+				return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+			end,
+		}
 
-	SettingsGroup:AddButton("Unload", function()
-		Globals:Unload()
-	end)
-	Interface.Library.ToggleKeybind = Options.MenuKeybind
+		Interface.Library.ToggleKeybind = Options.MenuKeybind
+		local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+		SettingsGroup:AddToggle("ShowWatermark", {
+			Default = Watermark.Enabled,
+			Text = "Show Watermark",
+			Callback = function(value)
+				Watermark.Enabled = value
+			end,
+		})
+		SettingsGroup:AddToggle("KeybindMenuOpen", {
+			Default = Interface.Library.KeybindFrame.Visible,
+			Text = "Open Keybind Menu",
+			Callback = function(value)
+				Interface.Library.KeybindFrame.Visible = value
+			end,
+		})
+		SettingsGroup:AddToggle("ShowCustomCursor", {
+			Text = "Custom Cursor",
+			Default = true,
+			Callback = function(Value)
+				Interface.Library.ShowCustomCursor = Value
+			end,
+		})
+		SettingsGroup:AddDivider()
+		SettingsGroup:AddLabel("Menu bind")
+			:AddKeyPicker("MenuKeybind", { Default = "Z", NoUI = true, Text = "Menu keybind" })
+
+		SettingsGroup:AddButton("Unload", function()
+			Globals:Unload()
+		end)
+
+		Cheat:Connect(RunService.Heartbeat, function(a0: number)
+			if not Watermark.Enabled then
+				return
+			end
+
+			Watermark.FrameCounter += 1
+
+			local Now = tick()
+			if (Now - Watermark.FrameTimer) >= 1 then
+				Watermark.FPS = Watermark.FrameCounter
+				Watermark.FrameTimer = Now
+				Watermark.FrameCounter = 0
+			end
+
+			local Success, Ping = SecureCall(function(...): ...any
+				return Watermark.GetPing()
+			end)
+
+			if Success and Ping then
+				Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps | {Ping} ms`)
+			else
+				Interface.Library:SetWatermark(`ketamine.tranq | {Watermark.FPS} fps`)
+			end
+		end)
+	end
+
+	local function ConfigTab()
+		Interface.SaveManager:SetLibrary(Interface.Library)
+		Interface.ThemeManager:SetLibrary(Interface.Library)
+		Interface.SaveManager:IgnoreThemeSettings()
+		Interface.ThemeManager:SetFolder("ketamine.tranq")
+		Interface.SaveManager:SetFolder("ketamine.tranq")
+		Interface.SaveManager:BuildConfigSection(Tabs.Configuration)
+		Interface.ThemeManager:ApplyToTab(Tabs.Configuration)
+		Interface.SaveManager:LoadAutoloadConfig()
+	end
+
+	MiscTab()
+	SettingsTab()
+	ConfigTab()
 	Interface.Library:OnUnload(function()
-		if
-			Watermark.Connection
-			and typeof(Watermark.Connection) == "RBXScriptConnection"
-			and Watermark.Connection.Connected
-		then
-			Watermark.Connection:Disconnect()
-			Watermark.Connection = nil
-		end
 		Interface.Library.Unloaded = true
 	end)
-
-	Interface.SaveManager:SetLibrary(Interface.Library)
-	Interface.ThemeManager:SetLibrary(Interface.Library)
-	Interface.SaveManager:IgnoreThemeSettings()
-	Interface.ThemeManager:SetFolder("ketamine.tranq")
-	Interface.SaveManager:SetFolder("ketamine.tranq")
-	Interface.SaveManager:BuildConfigSection(Tabs.Configuration)
-	Interface.ThemeManager:ApplyToTab(Tabs.Configuration)
-	Interface.SaveManager:LoadAutoloadConfig()
 end
 
+-- Runtime Functions
 function Globals:Load()
 	for _, Module in pairs(Modules) do
 		local Success, _ = SecureCall(Module.Load, Module)
@@ -172,8 +163,9 @@ function Globals:Load()
 		end
 	end
 
-	local Success, R = SecureCall(Globals.SetupMenu, Globals)
+	local Success, Result = SecureCall(BuildMenu)
 	if not Success then
+		DebugNotify(Result)
 		Globals:Unload()
 		return
 	end

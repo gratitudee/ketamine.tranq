@@ -104,6 +104,19 @@ local Entity = {
 	},
 }
 
+function Entity:GetLocalPlayer()
+	local Character = LocalPlayer.Character
+	return Entity.Entities[LocalPlayer.Name]
+		or Entity:Register(LocalPlayer.Name, {
+			Player = LocalPlayer,
+			Character = Character or nil,
+			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
+			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
+			Name = LocalPlayer.Name,
+			DisplayName = LocalPlayer.DisplayName,
+		})
+end
+
 function Entity:_UpdateEntity(EntityObject)
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
@@ -113,10 +126,10 @@ function Entity:_UpdateEntity(EntityObject)
 		if Humanoid then
 			EntityObject.Health = Humanoid.Health
 		elseif EntityObject.HealthInstance then
-			local Success, R = pcall(function(...)
+			local Success, Result = SecureCall(function(...)
 				return EntityObject.HealthInstance.Value
 			end)
-			EntityObject.Health = Success and R or 69
+			EntityObject.Health = Success and Result or 69
 		else
 			EntityObject.Health = 67
 		end
@@ -136,19 +149,6 @@ function Entity:_UpdateEntity(EntityObject)
 	end
 
 	SecureSpawn(EntityObject.CustomUpdate, EntityObject)
-end
-
-function Entity:GetLocalPlayer()
-	local Character = LocalPlayer.Character
-	return Entity.Entities[LocalPlayer.Name]
-		or Entity:Register(LocalPlayer.Name, {
-			Player = LocalPlayer,
-			Character = Character or nil,
-			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-			Name = LocalPlayer.Name,
-			DisplayName = LocalPlayer.DisplayName,
-		})
 end
 
 function Entity:Register(Character, Data)
