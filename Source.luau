@@ -26,6 +26,22 @@ function Globals:SetupMenu()
 		Configuration = Window:AddTab("Configuration"),
 	}
 
+	-- Misc / Playertab 😀
+	local PlayersGroupbox = Tabs.Miscellaneous:AddLeftGroupbox()
+	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox()
+
+	PlayersGroupbox:AddDropdown("EntityDropdown", {
+		Text = "Players",
+		AllowNull = true,
+	})
+
+	TeamsGroupbox:AddDropdown("TeamDropdown", {
+		SpecialType = "Team",
+		Text = "Teams",
+		AllowNull = true,
+	})
+
+	-- Settings and stuff
 	local Watermark = {
 		Enabled = false,
 		FrameTimer = tick(),
