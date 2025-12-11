@@ -27,7 +27,6 @@ function Globals:Unload()
 	end
 
 	for _, UnloadCallback in pairs(self.UnloadCallbacks) do
-		print(UnloadCallback)
 		SecureSpawn(UnloadCallback)
 	end
 
@@ -36,6 +35,7 @@ end
 
 function Globals:OnUnload(Callback)
 	table.insert(Globals.UnloadCallbacks, Callback)
+	print("Registed a callback")
 end
 
 getgenv().Globals = Globals
