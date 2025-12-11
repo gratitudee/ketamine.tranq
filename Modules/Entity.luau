@@ -273,12 +273,12 @@ function Entity:Load()
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Entity.Entities) do
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				SecureSpawn(function(...): ...any
+				SecureCall(function(...): ...any
 					Entity:_UpdateEntity(EntityObject)
 				end)
 				EntityObject._LastUpdate = Now
 			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 100 then
-				SecureSpawn(function(...): ...any
+				SecureCall(function(...): ...any
 					Entity:_UpdateEntity(EntityObject)
 				end)
 				EntityObject._LastUpdate = Now
