@@ -186,7 +186,23 @@ end
 
 function Entity:Load()
 	for _, Player in pairs(Players:GetPlayers()) do
-		SecureCall(function(...): ...any
+		if Player ~= Players.LocalPlayer then
+			SecureCall(function(...): ...any
+				local Character = Player.Character
+				Entity:Register(Player.Name, {
+					Player = Player,
+					Character = Character or nil,
+					PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
+					Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
+					Name = Player.Name,
+					DisplayName = Player.DisplayName,
+				})
+			end)
+		end
+	end
+
+	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
+		if Player ~= Players.LocalPlayer then
 			local Character = Player.Character
 			Entity:Register(Player.Name, {
 				Player = Player,
@@ -196,19 +212,7 @@ function Entity:Load()
 				Name = Player.Name,
 				DisplayName = Player.DisplayName,
 			})
-		end)
-	end
-
-	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
-		local Character = Player.Character
-		Entity:Register(Player.Name, {
-			Player = Player,
-			Character = Character or nil,
-			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-			Name = Player.Name,
-			DisplayName = Player.DisplayName,
-		})
+		end
 	end)
 
 	Cheat:Connect(Players.PlayerRemoving, function(Player: Player, a1: Enum.PlayerExitReason)
