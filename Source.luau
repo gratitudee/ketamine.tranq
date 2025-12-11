@@ -10,7 +10,7 @@ local Globals = {
 
 function Globals:SetupMenu()
 	local Window = Interface.Library:CreateWindow({
-		Title = "KETAMINE.TRANQ",
+		Title = "ketamine.tranq",
 		Center = true,
 		AutoShow = not Ketamine.StealthMode,
 		UnlockMouseWhileOpen = true,
