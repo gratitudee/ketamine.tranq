@@ -226,6 +226,10 @@ function Entity:Load()
 	end)
 end
 
-function Entity:Unload() end
+function Entity:Unload()
+	for Registered, _ in pairs(Entity.Entities) do
+		Entity:Unregister(Registered)
+	end
+end
 
 return Entity
