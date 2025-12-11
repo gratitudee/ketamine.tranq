@@ -149,6 +149,14 @@ function Globals:Load()
 end
 
 function Globals:Unload()
+	for _, Connection in pairs(Globals.Connections) do
+		if Connection and typeof(Connection) == "RBXScriptConnection" and Connection.Connected then
+			Connection:Disconnect()
+			Connection = nil
+		end
+	end
+	table.clear(Globals.Connections)
+
 	for _, Module in pairs(Modules) do
 		SecureSpawn(Module.Unload, Module)
 	end
