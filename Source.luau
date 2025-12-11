@@ -44,14 +44,13 @@ function Globals:SetupMenu()
 	})
 
 	Entity:OnEntityAdded(function(Player)
-		print(`added {Player.Name}`)
-		Dropdown:AddValues(Player.Name)
+		Options.EntityDropdown:AddValues(Player.Name)
 	end)
 
 	Entity:OnEntityRemoved(function(Player)
-		print(`removed {Player.Name}`)
 		local Values = Dropdown.Values
 		table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
+		Options.EntityDropdown:SetValues(Values)
 	end)
 
 	TeamsGroupbox:AddDropdown("TeamDropdown", {
@@ -173,13 +172,11 @@ function Globals:Load()
 		end
 	end
 
-	task.delay(1, function()
-		local Success, R = SecureCall(Globals.SetupMenu, Globals)
-		if not Success then
-			Globals:Unload()
-			return
-		end
-	end)
+	local Success, R = SecureCall(Globals.SetupMenu, Globals)
+	if not Success then
+		Globals:Unload()
+		return
+	end
 end
 
 function Globals:Unload()
