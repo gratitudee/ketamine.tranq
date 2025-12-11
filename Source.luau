@@ -31,6 +31,7 @@ function Globals:SetupMenu()
 	local TeamsGroupbox = Tabs.Miscellaneous:AddRightGroupbox()
 
 	PlayersGroupbox:AddDropdown("EntityDropdown", {
+		Values = { "_" },
 		Text = "Players",
 		AllowNull = true,
 	})
