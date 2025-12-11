@@ -237,20 +237,18 @@ function Entity:Load()
 	end)
 
 	Cheat:Connect(RunService.Heartbeat, function(a0: number)
+		if not Globals then
+			return
+		end
+
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Entity.Entities) do
-			if
-				not EntityObject._LastUpdate
-				or not Globals and Globals.Flags and Globals.Flags.Settings.EntityCacheUpdate
-			then
-				return
-			end
-
-			if (Now - EntityObject._LastUpdate * 1000) >= Globals.Flags.Settings.EntityCacheUpdate * 1000 then
+			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
 				SecureSpawn(Entity._UpdateEntity, EntityObject)
 				EntityObject._LastUpdate = Now
-
-				print(EntityObject.Position, EntityObject.Velocity, EntityObject.Health)
+			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 1000 then
+				SecureSpawn(Entity._UpdateEntity, EntityObject)
+				EntityObject._LastUpdate = Now
 			end
 		end
 	end)
