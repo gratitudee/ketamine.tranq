@@ -499,6 +499,7 @@ do
 		self:LoadDefault()
 
 		local function UpdateTheme()
+			print("THEME CHANGED!!!")
 			self:ThemeUpdate()
 		end
 		self.Library.Options.BackgroundColor:OnChanged(UpdateTheme)
