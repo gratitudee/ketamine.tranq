@@ -1,3 +1,4 @@
+-- Setup for Globals and Menu
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
 local Toggles = Interface.Library.Toggles
@@ -23,47 +24,25 @@ function Globals:SetupMenu()
 		Configuration = Window:AddTab("Configuration"),
 	}
 
-	-- Settings
+	-- Menu setup...
 	local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
-	SettingsGroup:AddToggle("KeybindMenuOpen", {
-		Default = Interface.Library.KeybindFrame.Visible,
-		Text = "Open Keybind Menu",
-		Callback = function(value)
-			Interface.Library.KeybindFrame.Visible = value
-		end,
-	})
-	SettingsGroup:AddToggle("ShowCustomCursor", {
-		Text = "Custom Cursor",
-		Default = true,
-		Callback = function(Value)
-			Interface.Library.ShowCustomCursor = Value
-		end,
-	})
-	SettingsGroup:AddDivider()
-	SettingsGroup:AddLabel("Menu bind")
-		:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
 	SettingsGroup:AddButton("Unload", function()
+		print("Unload button pressed")
+		Globals:Unload()
 		Interface.Library:Unload()
 	end)
+
 	Interface.Library.ToggleKeybind = Options.MenuKeybind
 	Interface.Library:OnUnload(function()
+		print("Library Unloaded")
 		Interface.Library.Unloaded = true
 	end)
-
-	-- Configuration
-	Interface.SaveManager:SetLibrary(Interface.Library)
-	Interface.ThemeManager:SetLibrary(Interface.Library)
-	Interface.SaveManager:IgnoreThemeSettings()
-	Interface.ThemeManager:SetFolder("ketamine.tranq")
-	Interface.SaveManager:SetFolder("ketamine.tranq")
-	Interface.SaveManager:BuildConfigSection(Tabs.Configuration)
-	Interface.ThemeManager:ApplyToTab(Tabs.Configuration)
-	Interface.SaveManager:LoadAutoloadConfig()
 end
 
 function Globals:Load()
+	print("Loading modules")
 	for _, Module in pairs(Modules) do
-		local Success = SecureSpawn(Module.Load, Module)
+		local Success, Error = SecureCall(Module.Load, Module)
 		if not Success then
 			DebugNotify("Failed to load, Unloading.")
 			Globals:Unload()
@@ -80,11 +59,13 @@ function Globals:Load()
 end
 
 function Globals:Unload()
+	print("Unloading")
 	for _, Module in pairs(Modules) do
 		SecureSpawn(Module.Unload, Module)
 	end
 
 	for _, UnloadCallback in pairs(self.UnloadCallbacks) do
+		print("Executing callback")
 		SecureSpawn(UnloadCallback)
 	end
 
@@ -92,6 +73,7 @@ function Globals:Unload()
 end
 
 function Globals:OnUnload(Callback)
+	print("Registering callback.")
 	table.insert(Globals.UnloadCallbacks, Callback)
 end
 
