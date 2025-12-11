@@ -71,8 +71,9 @@ function Globals:Load()
 		end
 	end
 
-	local Success = SecureCall(Globals.SetupMenu, Globals)
+	local Success, R = SecureCall(Globals.SetupMenu, Globals)
 	if not Success then
+		print(Success, R)
 		Globals:Unload()
 		return
 	end
