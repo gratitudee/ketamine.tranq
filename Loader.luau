@@ -72,13 +72,13 @@ return function(LaunchOptions: {
 	}
 
 	local Source = Import("Source.luau")
-	Source:OnUnload(function()
-		Ketamine.Interface.Library:Unload()
-		Ketamine.Loaded = false
-		getgenv().Ketamine = nil
-	end)
 
 	task.delay(1, function()
 		Source:Load()
+		Source:OnUnload(function()
+			Ketamine.Interface.Library:Unload()
+			Ketamine.Loaded = false
+			getgenv().Ketamine = nil
+		end)
 	end)
 end
