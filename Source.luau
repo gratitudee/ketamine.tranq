@@ -1,3 +1,5 @@
+local Ketamine = Ketamine or getgenv().Ketamine
+print(Ketamine)
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
 local Toggles = Interface.Library.Toggles
