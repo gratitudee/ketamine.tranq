@@ -8,6 +8,12 @@ local Toggles = Interface.Library.Toggles
 local Globals = {
 	Connections = {},
 	UnloadCallbacks = {},
+	Flags = {
+
+		Settings = {
+			EntityCacheUpdate = 5, -- ms
+		},
+	},
 }
 
 function Globals:SetupMenu()
@@ -43,6 +49,20 @@ function Globals:SetupMenu()
 	})
 
 	-- Settings and stuff
+	local CheatSettings = Tabs.Settings:AddRightGroupbox("Settings")
+	CheatSettings:AddSlider("EntityCacheUpdate", {
+		Text = "Entity Cache Update Time (ms)",
+		Default = 1,
+		Min = 1,
+		Max = 10,
+		Rounding = 1,
+		Compact = false,
+
+		Callback = function(value)
+			Globals.Flags.Settings.EntityCacheUpdate = value
+		end,
+	})
+
 	local Watermark = {
 		Enabled = false,
 		FrameTimer = tick(),
