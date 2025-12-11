@@ -24,18 +24,41 @@ function Globals:SetupMenu()
 		Configuration = Window:AddTab("Configuration"),
 	}
 
-	-- Menu setup...
 	local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+	SettingsGroup:AddToggle("KeybindMenuOpen", {
+		Default = Interface.Library.KeybindFrame.Visible,
+		Text = "Open Keybind Menu",
+		Callback = function(value)
+			Interface.Library.KeybindFrame.Visible = value
+		end,
+	})
+	SettingsGroup:AddToggle("ShowCustomCursor", {
+		Text = "Custom Cursor",
+		Default = true,
+		Callback = function(Value)
+			Interface.Library.ShowCustomCursor = Value
+		end,
+	})
+	SettingsGroup:AddDivider()
+	SettingsGroup:AddLabel("Menu bind")
+		:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+
 	SettingsGroup:AddButton("Unload", function()
-		print("Unload button pressed")
 		Globals:Unload()
 	end)
-
 	Interface.Library.ToggleKeybind = Options.MenuKeybind
 	Interface.Library:OnUnload(function()
-		print("Library Unloaded")
 		Interface.Library.Unloaded = true
 	end)
+
+	Interface.SaveManager:SetLibrary(Interface.Library)
+	Interface.ThemeManager:SetLibrary(Interface.Library)
+	Interface.SaveManager:IgnoreThemeSettings()
+	Interface.ThemeManager:SetFolder("ketamine.tranq")
+	Interface.SaveManager:SetFolder("ketamine.tranq")
+	Interface.SaveManager:BuildConfigSection(Tabs.Configuration)
+	Interface.ThemeManager:ApplyToTab(Tabs.Configuration)
+	Interface.SaveManager:LoadAutoloadConfig()
 end
 
 function Globals:Load()
