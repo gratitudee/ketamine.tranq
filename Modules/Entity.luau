@@ -260,7 +260,7 @@ function ECS:Register(id, data)
 	C.PrimaryPart[id] = data.PrimaryPart or (data.Character and data.Character:FindFirstChild("Head"))
 	C.Humanoid[id] = data.Humanoid or (data.Character and data.Character:FindFirstChildOfClass("Humanoid"))
 	C.Team[id] = data.Team or (data.Player and data.Player.Team) or "Neutral"
-	C.TeamColor[id] = data.TeamColor or (data.Player and data.Player.TeamColor)
+	C.TeamColor[id] = data.TeamColor or (data.Player and data.Player.TeamColor and data.Player.TeamColor.Color)
 	C.Player[id] = data.Player
 	C.CustomUpdate[id] = data.CustomUpdate
 	C.Name[id] = data.Name
@@ -357,7 +357,7 @@ function ECS:UpdateEntity(id)
 	if player then
 		local playerTeam = player.Team or "Neutral"
 		C.Team[id] = playerTeam
-		C.TeamColor[id] = player.TeamColor
+		C.TeamColor[id] = player.TeamColor and player.TeamColor.Color or Color3.new(1, 1, 1)
 		C.IsEnemy[id] = (playerTeam ~= C.Team[LocalPlayer.Name])
 	end
 
