@@ -127,7 +127,8 @@ function Module:_UpdateEntity(EntityObject)
 		return
 	end
 
-	local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstAncestorOfClass("Camera"))
+	-- TODO: Support custom raycast origin 👍
+	local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstChildOfClass("Camera").CFrame.Position)
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
 	EntityObject.IsVisible = Visible
