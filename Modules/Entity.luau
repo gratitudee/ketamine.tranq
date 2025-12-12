@@ -119,8 +119,10 @@ end
 
 function Module:_UpdateEntity(EntityObject)
 	if not EntityObject.PrimaryPart then
-		EntityObject.PrimaryPart = EntityObject.Character and EntityObject.Character.PrimaryPart
-			or EntityObject.Character:FindFirstChild("Head")
+		local Character = EntityObject.Character
+		if Character then
+			EntityObject.PrimaryPart = Character.PrimaryPart or Character:FindFirstChild("Head")
+		end
 		return
 	end
 
@@ -160,7 +162,10 @@ end
 
 function Module:Register(Character, Data)
 	if not Data.Player and (not Character or not Data.PrimaryPart or not Data.Name) then
-		DebugNotify(`[REGISTER] | Critical Information Missing`)
+		DebugNotify({
+			Title = "ENTITY",
+			Description = "Failed To Register Entity.",
+		})
 		return false
 	end
 

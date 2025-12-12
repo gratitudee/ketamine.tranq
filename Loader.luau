@@ -52,7 +52,10 @@ return function(LaunchOptions: {
 	StealthMode: boolean,
 })
 	if Ketamine and Ketamine.Loaded then
-		DebugNotify("Failed to load, already loaded.")
+		DebugNotify({
+			Title = "ERROR",
+			Description = "Ketamine Is Already Loaded..",
+		})
 		return
 	end
 

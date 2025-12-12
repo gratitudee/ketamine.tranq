@@ -36,7 +36,7 @@ declare function request(table: {Url: string, Method: string}): (string)
 declare function SecureSpawn(func: (...any) -> ...any, a: any?, b: any?, c: any?, d: any?, e: any?): ()
 declare function SecureCall(func: (...any) -> ...any, a: any?, b: any?, c: any?, d: any?, e: any?): (boolean, ...any)
 declare function Import(ModulePath: string): any | nil
-declare function DebugNotify(Message: string): ()    
+declare function DebugNotify(Message: string | {Title: string?, Description: string, Time: number?, SoundId: number?}): ()    
 
 declare Drawing: {
     new: ((Type: "Line" | "Text" | "Image" | "Circle" | "Square" | "Triangle" | "Quad") -> any),

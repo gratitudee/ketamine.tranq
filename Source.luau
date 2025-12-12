@@ -48,7 +48,10 @@ local function BuildMenu()
 			Text = "Whitelist Player",
 			Func = function()
 				if not Options.EntityDropdown.Value then
-					DebugNotify("Failed To Whitelist - No Player Selected.")
+					DebugNotify({
+						Title = "PLAYER WHITELIST",
+						Description = "No Option Selected",
+					})
 					return
 				end
 			end,
@@ -59,7 +62,10 @@ local function BuildMenu()
 			Text = "Spectate Player",
 			Func = function()
 				if not Options.EntityDropdown.Value then
-					DebugNotify("Failed To Spectate - No Player Selected.")
+					DebugNotify({
+						Title = "PLAYER SPECTATE",
+						Description = "No Option Selected",
+					})
 					return
 				end
 			end,
@@ -77,7 +83,10 @@ local function BuildMenu()
 			Text = "Whitelist Team",
 			Func = function()
 				if not Options.TeamDropdown.Value then
-					DebugNotify("Failed To Whitelist - No Team Selected")
+					DebugNotify({
+						Title = "TEAM WHITELIST",
+						Description = "No Option Selected",
+					})
 				end
 			end,
 			Disabled = false,
@@ -186,7 +195,6 @@ end
 function Globals:Load()
 	local Success, Result = SecureCall(BuildMenu)
 	if not Success then
-		DebugNotify(Result)
 		Globals:Unload()
 		return
 	end
@@ -194,7 +202,6 @@ function Globals:Load()
 	for _, Module in pairs(Modules) do
 		local Success2, _ = SecureCall(Module.Load, Module)
 		if not Success2 then
-			DebugNotify("Failed to load, Unloading.")
 			Globals:Unload()
 			break
 		end
