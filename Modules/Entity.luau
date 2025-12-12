@@ -118,6 +118,10 @@ function Module:GetLocalPlayer()
 end
 
 function Module:_UpdateEntity(EntityObject)
+	if not EntityObject.PrimaryPart then
+		EntityObject.PrimaryPart = EntityObject.Character.PrimaryPart or EntityObject.Character:FindFirstChild("Head")
+	end
+
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
 
@@ -153,9 +157,8 @@ function Module:_UpdateEntity(EntityObject)
 end
 
 function Module:Register(Character, Data)
-	if not Character or not Data.PrimaryPart or not Data.Name then
+	if not Data.Player and (not Character or not Data.PrimaryPart or not Data.Name) then
 		DebugNotify(`[REGISTER] | Critical Information Missing`)
-		print(`{Character} {Data.PrimaryPart} {Data.Name}`)
 		return false
 	end
 
