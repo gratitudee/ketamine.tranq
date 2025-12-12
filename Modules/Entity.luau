@@ -121,25 +121,28 @@ function Module:_UpdateEntity(EntityObject)
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
 
-	if not EntityObject.CustomUpdate then
-		local Humanoid = self.Humanoid
-		if Humanoid then
-			EntityObject.Health = Humanoid.Health
-		elseif EntityObject.HealthInstance then
-			local Success, Result = SecureCall(function(...)
-				return EntityObject.HealthInstance.Value
-			end)
-			EntityObject.Health = Success and Result or 69
-		else
-			EntityObject.Health = 67
-		end
+	if EntityObject.CustomUpdate then
+		SecureSpawn(EntityObject.CustomUpdate, EntityObject)
+		return
+	end
 
-		EntityObject.IsAlive = EntityObject.Health > 0
+	local Humanoid = self.Humanoid
+	if Humanoid then
+		EntityObject.Health = Humanoid.Health
+	elseif EntityObject.HealthInstance then
+		local Success, Result = SecureCall(function(...)
+			return EntityObject.HealthInstance.Value
+		end)
+		EntityObject.Health = Success and Result or 69
+	else
+		EntityObject.Health = 67
+	end
 
-		if EntityObject.Player then
-			EntityObject.Team = EntityObject.Player.Team or "Neutral"
-			EntityObject.TeamColor = EntityObject.Player.TeamColor or nil
-		end
+	EntityObject.IsAlive = EntityObject.Health > 0
+
+	if EntityObject.Player then
+		EntityObject.Team = EntityObject.Player.Team or "Neutral"
+		EntityObject.TeamColor = EntityObject.Player.TeamColor or nil
 	end
 
 	if EntityObject.Team == "Neutral" then
@@ -147,8 +150,6 @@ function Module:_UpdateEntity(EntityObject)
 	else
 		EntityObject.IsEnemy = (self.Team ~= Module:GetLocalPlayer().Team)
 	end
-
-	SecureSpawn(EntityObject.CustomUpdate, EntityObject)
 end
 
 function Module:Register(Character, Data)
@@ -273,10 +274,10 @@ function Module:Load()
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Module.Entities) do
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				Module:_UpdateEntity(EntityObject)
+				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 100 then
-				Module:_UpdateEntity(EntityObject)
+				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
 		end
