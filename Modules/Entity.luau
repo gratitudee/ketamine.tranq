@@ -37,11 +37,18 @@ local CubeCorners = {
 	Vector3.new(0, 1, 1),
 }
 
--- Utilities
+local math_min = math.min
+local math_max = math.max
+local math_huge = math.huge
+local table_insert = table.insert
+local table_remove = table.remove
+local os_clock = os.clock
+
 local function GetRigType(character)
 	if not character then
 		return "Unknown"
 	end
+
 	if character:FindFirstChild("UpperTorso") then
 		return "R15"
 	elseif character:FindFirstChild("Torso") then
@@ -51,59 +58,68 @@ local function GetRigType(character)
 end
 
 local function GetSkeletonStruct(RigType)
-	return DefaultSkeletons[RigType] or nil
+	return DefaultSkeletons[RigType]
 end
+
+local R6Parts = { "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }
+local R15Parts = {
+	"Head",
+	"UpperTorso",
+	"LowerTorso",
+	"HumanoidRootPart",
+	"LeftUpperArm",
+	"LeftLowerArm",
+	"LeftHand",
+	"RightUpperArm",
+	"RightLowerArm",
+	"RightHand",
+	"LeftUpperLeg",
+	"LeftLowerLeg",
+	"LeftFoot",
+	"RightUpperLeg",
+	"RightLowerLeg",
+	"RightFoot",
+}
 
 local function GetBodyPartNames(character, RigType)
 	if not character then
 		return {}
 	end
 	if RigType == "R6" then
-		return { "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }
+		return R6Parts
 	elseif RigType == "R15" then
-		return {
-			"Head",
-			"UpperTorso",
-			"LowerTorso",
-			"HumanoidRootPart",
-			"LeftUpperArm",
-			"LeftLowerArm",
-			"LeftHand",
-			"RightUpperArm",
-			"RightLowerArm",
-			"RightHand",
-			"LeftUpperLeg",
-			"LeftLowerLeg",
-			"LeftFoot",
-			"RightUpperLeg",
-			"RightLowerLeg",
-			"RightFoot",
-		}
-	else
-		return character.BodyParts or {}
+		return R15Parts
 	end
+	return character.BodyParts or {}
 end
 
 local function GetBones(character, bodyParts)
 	local parts = {}
-	for _, name in ipairs(bodyParts) do
+	for i = 1, #bodyParts do
+		local name = bodyParts[i]
 		parts[name] = character:FindFirstChild(name)
 	end
 	return parts
 end
 
 local function GetSkeletonBones(bonesTable, skeletonStruct)
-	local skeletonBones = {}
 	if not bonesTable or not skeletonStruct then
 		return {}
 	end
-	for _, pair in ipairs(skeletonStruct) do
+
+	local skeletonBones = {}
+	local count = 0
+
+	for i = 1, #skeletonStruct do
+		local pair = skeletonStruct[i]
 		local partA = bonesTable[pair[1]]
 		local partB = bonesTable[pair[2]]
 		if partA and partB then
-			table.insert(skeletonBones, { partA, partB })
+			count = count + 1
+			skeletonBones[count] = { partA, partB }
 		end
 	end
+
 	return skeletonBones
 end
 
@@ -131,6 +147,7 @@ local ECS = {
 		Name = {},
 	},
 	Callbacks = { Added = {}, Removed = {} },
+	EntityLookup = {},
 }
 
 function ECS:GetEntityView(id)
@@ -166,12 +183,12 @@ function ECS:CalculateBoundingBox(id)
 	end
 
 	local bones = C.Bones[id]
-	if not bones or not next(bones) then
+	if not bones then
 		return nil
 	end
 
-	local minX, minY = math.huge, math.huge
-	local maxX, maxY = -math.huge, -math.huge
+	local minX, minY = math_huge, math_huge
+	local maxX, maxY = -math_huge, -math_huge
 	local foundVisible = false
 
 	for _, part in pairs(bones) do
@@ -179,15 +196,17 @@ function ECS:CalculateBoundingBox(id)
 			local cf = part.CFrame
 			local halfSize = part.Size * 0.5
 
-			for _, corner in ipairs(CubeCorners) do
+			for i = 1, 4 do
+				local corner = CubeCorners[i]
 				local worldPos = cf:PointToWorldSpace(halfSize * corner)
 				local screenPos, onScreen = Utility:WorldToScreen(worldPos)
 				if onScreen then
 					foundVisible = true
-					minX = math.min(minX, screenPos.X)
-					maxX = math.max(maxX, screenPos.X)
-					minY = math.min(minY, screenPos.Y)
-					maxY = math.max(maxY, screenPos.Y)
+					local sx, sy = screenPos.X, screenPos.Y
+					minX = math_min(minX, sx)
+					maxX = math_max(maxX, sx)
+					minY = math_min(minY, sy)
+					maxY = math_max(maxY, sy)
 				end
 			end
 		end
@@ -202,14 +221,29 @@ function ECS:CalculateBoundingBox(id)
 	local padX = width * 0.15
 	local padY = height * 0.1
 
-	local box = {
+	return {
 		X = minX - padX,
 		Y = minY - padY,
 		W = width + padX * 2,
 		H = height + padY * 2,
 	}
+end
 
-	return box
+local function SetupCharacterUpdate(self, id, char)
+	local C = self.Components
+	C.Character[id] = char
+	C.PrimaryPart[id] = char.PrimaryPart or char:FindFirstChild("Head")
+	C.Humanoid[id] = char:FindFirstChildOfClass("Humanoid")
+
+	local rigType = GetRigType(char)
+	C.BodyParts[id] = GetBodyPartNames(char, rigType)
+	C.Bones[id] = GetBones(char, C.BodyParts[id])
+	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
+	C.BoundingBox[id] = self:CalculateBoundingBox(id)
+
+	C.Position[id] = Vector3.zero
+	C.Velocity[id] = Vector3.zero
+	C.LastUpdate[id] = 0
 end
 
 function ECS:Register(id, data)
@@ -221,88 +255,86 @@ function ECS:Register(id, data)
 
 	local rigType = GetRigType(data.Character)
 	local C = self.Components
-	C.Character[id] = data.Character or nil
+
+	C.Character[id] = data.Character
 	C.PrimaryPart[id] = data.PrimaryPart or (data.Character and data.Character:FindFirstChild("Head"))
 	C.Humanoid[id] = data.Humanoid or (data.Character and data.Character:FindFirstChildOfClass("Humanoid"))
 	C.Team[id] = data.Team or (data.Player and data.Player.Team) or "Neutral"
 	C.TeamColor[id] = data.TeamColor or (data.Player and data.Player.TeamColor)
-	C.Player[id] = data.Player or nil
-	C.CustomUpdate[id] = data.CustomUpdate or nil
+	C.Player[id] = data.Player
+	C.CustomUpdate[id] = data.CustomUpdate
 	C.Name[id] = data.Name
 	C.DisplayName[id] = data.DisplayName or data.Name
 	C.Health[id] = 0
-	C.Position[id] = Vector3.new(0, 0, 0)
-	C.Velocity[id] = Vector3.new(0, 0, 0)
+	C.Position[id] = Vector3.zero
+	C.Velocity[id] = Vector3.zero
 	C.LastUpdate[id] = 0
 	C.BodyParts[id] = GetBodyPartNames(data.Character, rigType)
 	C.Bones[id] = GetBones(data.Character, C.BodyParts[id])
 	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
-	C.BoundingBox[id] = ECS:CalculateBoundingBox(id)
+	C.BoundingBox[id] = self:CalculateBoundingBox(id)
 	C.IsAlive[id] = true
 	C.IsEnemy[id] = false
 
 	if data.Player then
 		data.Player.CharacterAdded:Connect(function(char)
 			task.delay(0.5, function()
-				C.Character[id] = char
-				C.PrimaryPart[id] = char.PrimaryPart or char:FindFirstChild("Head")
-				C.Humanoid[id] = char:FindFirstChildOfClass("Humanoid")
-
-				local rigType = GetRigType(char)
-				C.BodyParts[id] = GetBodyPartNames(char, rigType)
-				C.Bones[id] = GetBones(char, C.BodyParts[id])
-				C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
-				C.BoundingBox[id] = ECS:CalculateBoundingBox(id)
-
-				C.Position[id] = Vector3.new(0, 0, 0)
-				C.Velocity[id] = Vector3.new(0, 0, 0)
-				C.LastUpdate[id] = 0
+				SetupCharacterUpdate(self, id, char)
 			end)
 		end)
 	end
 
-	table.insert(self.Entities, id)
+	table_insert(self.Entities, id)
+	self.EntityLookup[id] = #self.Entities
 	self:TriggerCallbacks(id, "Added")
 end
 
 function ECS:Unregister(id)
 	self:TriggerCallbacks(id, "Removed")
+
 	local C = self.Components
 	for _, comp in pairs(C) do
 		comp[id] = nil
 	end
-	for i, eid in ipairs(self.Entities) do
-		if eid == id then
-			table.remove(self.Entities, i)
-			break
+
+	local idx = self.EntityLookup[id]
+	if idx then
+		table_remove(self.Entities, idx)
+		self.EntityLookup[id] = nil
+
+		for i = idx, #self.Entities do
+			self.EntityLookup[self.Entities[i]] = i
 		end
 	end
 end
 
 -- Callbacks
 function ECS:OnEntityAdded(fn)
-	table.insert(self.Callbacks.Added, fn)
+	table_insert(self.Callbacks.Added, fn)
 end
+
 function ECS:OnEntityRemoved(fn)
-	table.insert(self.Callbacks.Removed, fn)
+	table_insert(self.Callbacks.Removed, fn)
 end
+
 function ECS:TriggerCallbacks(id, state)
+	local callbacks = self.Callbacks[state]
+	if not callbacks or #callbacks == 0 then
+		return
+	end
+
 	local view = self:GetEntityView(id)
-	if state == "Added" then
-		for _, fn in pairs(self.Callbacks.Added) do
-			fn(view)
-		end
-	elseif state == "Removed" then
-		for _, fn in pairs(self.Callbacks.Removed) do
-			fn(view)
-		end
+	for i = 1, #callbacks do
+		callbacks[i](view)
 	end
 end
 
 function ECS:UpdateEntity(id)
 	local C = self.Components
-	local now = tick() * 1000
-	if C.LastUpdate[id] and (now - C.LastUpdate[id]) < (Globals.Flags.Settings.EntityCacheUpdate or 100) then
+	local now = os_clock() * 1000
+	local cacheTime = Globals.Flags.Settings.EntityCacheUpdate or 100
+
+	if C.LastUpdate[id] and (now - C.LastUpdate[id]) < cacheTime then
 		return
 	end
 
@@ -321,10 +353,14 @@ function ECS:UpdateEntity(id)
 
 	C.IsAlive[id] = (C.Health[id] > 0)
 
-	local playerTeam = C.Player[id] and C.Player[id].Team or "Neutral"
-	C.Team[id] = playerTeam
-	C.TeamColor[id] = C.Player[id] and C.Player[id].TeamColor or nil
-	C.IsEnemy[id] = (playerTeam ~= self.Components.Team[LocalPlayer.Name])
+	local player = C.Player[id]
+	if player then
+		local playerTeam = player.Team or "Neutral"
+		C.Team[id] = playerTeam
+		C.TeamColor[id] = player.TeamColor
+		C.IsEnemy[id] = (playerTeam ~= C.Team[LocalPlayer.Name])
+	end
+
 	C.BoundingBox[id] = self:CalculateBoundingBox(id)
 
 	local fn = C.CustomUpdate[id]
@@ -336,8 +372,9 @@ function ECS:UpdateEntity(id)
 end
 
 function ECS:UpdateAll()
-	for _, id in ipairs(self.Entities) do
-		self:UpdateEntity(id)
+	local entities = self.Entities
+	for i = 1, #entities do
+		self:UpdateEntity(entities[i])
 	end
 end
 
@@ -346,7 +383,9 @@ function ECS:GetLocalPlayer()
 end
 
 function ECS:Load()
-	for _, player in ipairs(Players:GetPlayers()) do
+	local players = Players:GetPlayers()
+	for i = 1, #players do
+		local player = players[i]
 		self:Register(player.Name, {
 			Player = player,
 			Character = player.Character,
@@ -370,21 +409,23 @@ function ECS:Load()
 		})
 	end)
 
-	Cheat:Connect(Players.PlayerRemoving, function(a0: Player, a1: Enum.PlayerExitReason)
+	Cheat:Connect(Players.PlayerRemoving, function(a0)
 		self:Unregister(a0.Name)
 	end)
 
-	Cheat:Connect(RunService.Heartbeat, function(a0: number)
+	Cheat:Connect(RunService.Heartbeat, function()
 		self:UpdateAll()
 	end)
 end
 
 function ECS:Unload()
-	for _, id in ipairs(self.Entities) do
-		self:Unregister(id)
+	local entities = self.Entities
+	for i = #entities, 1, -1 do
+		self:Unregister(entities[i])
 	end
 	self.Callbacks.Added = {}
 	self.Callbacks.Removed = {}
+	self.EntityLookup = {}
 end
 
 getgenv().Entity = ECS
