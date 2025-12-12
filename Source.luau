@@ -103,14 +103,19 @@ local function BuildMenu()
 			table.remove(Values, table.find(Values, Player.Name))
 			Options.EntityDropdown:SetValues(Values)
 		end)
-		getgenv().PlayerBoxes = {}
+		getgenv().PlayerSkeletons = {}
 		Entity:OnEntityAdded(function(Player)
-			PlayerBoxes[Player.Name] = Drawing.new("Square")
+			PlayerSkeletons[Player.Name] = {}
 		end)
 
 		Entity:OnEntityRemoved(function(Player)
-			PlayerBoxes[Player.Name]:Remove()
-			PlayerBoxes[Player.Name] = nil
+			local skel = PlayerSkeletons[Player.Name]
+			if skel then
+				for i = 1, #skel do
+					skel[i]:Remove()
+				end
+				PlayerSkeletons[Player.Name] = nil
+			end
 		end)
 	end
 
