@@ -51,6 +51,12 @@ local function BuildMenu()
 			Disabled = false,
 		})
 
+		local PlayerSpectateButton = PlayerWhitelistButton:AddButton({
+			Text = "Spectate Player",
+			Func = function() end,
+			Disabled = false,
+		})
+
 		TeamGroupbox:AddDropdown("TeamDropdown", {
 			SpecialType = "Team",
 			Text = "Teams",
@@ -66,6 +72,7 @@ local function BuildMenu()
 
 		Cheat:Connect(RunService.Heartbeat, function(a0: number)
 			PlayerWhitelistButton.Disabled = Options.EntityDropdown.Value == nil
+			PlayerSpectateButton.Disabled = Options.EntityDropdown.Value == nil
 			TeamWhitelistButton.Disabled = Options.TeamDropdown.Value == nil
 		end)
 
