@@ -103,6 +103,15 @@ local function BuildMenu()
 			table.remove(Values, table.find(Values, Player.Name))
 			Options.EntityDropdown:SetValues(Values)
 		end)
+		getgenv().PlayerBoxes = {}
+		Entity:OnEntityAdded(function(Player)
+			PlayerBoxes[Player.Name] = Drawing.new("Square")
+		end)
+
+		Entity:OnEntityRemoved(function(Player)
+			PlayerBoxes[Player.Name]:Remove()
+			PlayerBoxes[Player.Name] = nil
+		end)
 	end
 
 	local function SettingsTab()
