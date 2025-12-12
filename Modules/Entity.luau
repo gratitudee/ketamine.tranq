@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local Cheat = require("./Cheat")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -31,11 +32,11 @@ local DefaultSkeletons = {
 	},
 }
 
+-- Utilities
 local function GetRigType(character)
 	if not character then
 		return "Unknown"
 	end
-
 	if character:FindFirstChild("UpperTorso") then
 		return "R15"
 	elseif character:FindFirstChild("Torso") then
@@ -48,21 +49,14 @@ local function GetSkeletonStruct(RigType)
 	return DefaultSkeletons[RigType] or nil
 end
 
-local function GetBodyParts(Character, RigType: "R6" | "R15" | "Unknown")
-	if not Character then
+local function GetBodyParts(character, RigType)
+	if not character then
 		return nil
 	end
 
-	local limbs = nil
+	local limbs
 	if RigType == "R6" then
-		limbs = {
-			"Head",
-			"Torso",
-			"Left Arm",
-			"Right Arm",
-			"Left Leg",
-			"Right Leg",
-		}
+		limbs = { "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }
 	elseif RigType == "R15" then
 		limbs = {
 			"Head",
@@ -81,247 +75,229 @@ local function GetBodyParts(Character, RigType: "R6" | "R15" | "Unknown")
 			"RightLowerLeg",
 			"RightFoot",
 		}
-	elseif RigType == "Unknown" then
-		limbs = Character.BodyParts or {}
+	else
+		limbs = character.BodyParts or {}
 	end
 
-	local Parts = {}
-	for _, Name in ipairs(limbs) do
-		if Character.Character then
-			local Part = Character.Character:FindFirstChild("Limbs")
-			Parts[Name] = Part and Part or nil
-		end
+	local parts = {}
+	for _, name in ipairs(limbs) do
+		local part = character:FindFirstChild(name)
+		parts[name] = part
 	end
-
-	return Parts
+	return parts
 end
 
-local Module = {
+-- ECS Module
+local ECS = {
 	Entities = {},
-	Connections = {},
-	Callbacks = {
-		Added = {},
-		Removed = {},
+	Components = {
+		Character = {},
+		PrimaryPart = {},
+		Humanoid = {},
+		Health = {},
+		Position = {},
+		Velocity = {},
+		Team = {},
+		TeamColor = {},
+		BodyParts = {},
+		Skeleton = {},
+		IsAlive = {},
+		IsEnemy = {},
+		CustomUpdate = {},
+		Player = {},
+		LastUpdate = {},
+		DisplayName = {},
+		Name = {},
 	},
+	Callbacks = { Added = {}, Removed = {} },
 }
 
-function Module:GetLocalPlayer()
-	local Character = LocalPlayer.Character
-	return Module.Entities[LocalPlayer.Name]
-		or Module:Register(LocalPlayer.Name, {
-			Player = LocalPlayer,
-			Character = Character or nil,
-			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-			Name = LocalPlayer.Name,
-			DisplayName = LocalPlayer.DisplayName,
-		})
+-- Proxy entity view
+function ECS:GetEntityView(id)
+	return setmetatable({ id = id, ECS = self }, {
+		__index = function(t, key)
+			local comp = t.ECS.Components[key]
+			if comp then
+				return comp[id]
+			end
+			return nil
+		end,
+		__newindex = function(t, key, value)
+			local comp = t.ECS.Components[key]
+			if comp then
+				comp[id] = value
+			else
+				rawset(t, key, value)
+			end
+		end,
+	})
 end
 
-function Module:_UpdateEntity(EntityObject)
-	if not EntityObject.PrimaryPart then
-		local Character = EntityObject.Character
-		if Character then
-			EntityObject.PrimaryPart = Character.PrimaryPart or Character:FindFirstChild("Head")
+function ECS:Register(id, data)
+	if not data.Player then
+		if not data.Character or not data.PrimaryPart or not data.Name then
+			return
 		end
-		return
 	end
 
-	-- TODO: Support custom raycast origin 👍
-	-- local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstChildOfClass("Camera").CFrame.Position)
-	EntityObject.Position = EntityObject.PrimaryPart.Position
-	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
-	-- EntityObject.IsVisible = Visible
+	local C = self.Components
+	C.Character[id] = data.Character or nil
+	C.PrimaryPart[id] = data.PrimaryPart or (data.Character and data.Character:FindFirstChild("Head"))
+	C.Humanoid[id] = data.Humanoid or (data.Character and data.Character:FindFirstChildOfClass("Humanoid"))
+	C.Team[id] = data.Team or (data.Player and data.Player.Team) or "Neutral"
+	C.TeamColor[id] = data.TeamColor or (data.Player and data.Player.TeamColor)
+	C.Player[id] = data.Player or nil
+	C.CustomUpdate[id] = data.CustomUpdate or nil
+	C.Name[id] = data.Name
+	C.DisplayName[id] = data.DisplayName or data.Name
+	C.Health[id] = 0
+	C.Position[id] = Vector3.new(0, 0, 0)
+	C.Velocity[id] = Vector3.new(0, 0, 0)
+	C.LastUpdate[id] = 0
+	C.BodyParts[id] = GetBodyParts(data.Character, GetRigType(data.Character))
+	C.Skeleton[id] = GetSkeletonStruct(GetRigType(data.Character))
+	C.IsAlive[id] = true
+	C.IsEnemy[id] = false
 
-	-- print(`{EntityObject.Name} is {Visible and "Visible" or "Not Visible"}`)
-
-	if EntityObject.CustomUpdate then
-		SecureSpawn(EntityObject.CustomUpdate, EntityObject)
-		return
-	end
-
-	local Humanoid = self.Humanoid
-	if Humanoid then
-		EntityObject.Health = Humanoid.Health
-	elseif EntityObject.HealthInstance then
-		local Success, Result = SecureCall(function(...)
-			return EntityObject.HealthInstance.Value
-		end)
-		EntityObject.Health = Success and Result or 69
-	else
-		EntityObject.Health = 67
-	end
-
-	EntityObject.IsAlive = EntityObject.Health > 0
-
-	if EntityObject.Player then
-		EntityObject.Team = EntityObject.Player.Team or "Neutral"
-		EntityObject.TeamColor = EntityObject.Player.TeamColor or nil
-	end
-
-	if EntityObject.Team == "Neutral" then
-		EntityObject.IsEnemy = true
-	else
-		EntityObject.IsEnemy = (self.Team ~= Module:GetLocalPlayer().Team)
-	end
-end
-
-function Module:Register(Character, Data)
-	if not Data.Player and (not Character or not Data.PrimaryPart or not Data.Name) then
-		DebugNotify({
-			Title = "ENTITY",
-			Description = "Failed To Register Entity.",
-		})
-		return false
-	end
-
-	local RigType = GetRigType(Data.Character)
-	local EntityData = {
-		Character = Data.Character,
-		PrimaryPart = Data.PrimaryPart,
-		Team = Data.Team or (Data.Player and Data.Player.Team) or "Neutral",
-		TeamColor = Data.TeamColor or (Data.Player and Data.Player.Team) or nil,
-		Player = Data.Player,
-		Name = Data.Name,
-		DisplayName = Data.DisplayName or Data.Name,
-		BodyParts = GetBodyParts(Module, RigType),
-		SkeletonStructure = Data.SkeletonStruct or GetSkeletonStruct(RigType),
-		Health = 0,
-		Position = Vector3.new(0, 0, 0),
-		Velocity = Vector3.new(0, 0, 0),
-		CustomUpdate = Data.CustomUpdate,
-		_Connections = {},
-		_LastUpdate = 0,
-	}
-
-	if Data.Player then
-		EntityData._Connections.CharacterAdded = EntityData.Player.CharacterAdded:Connect(function(Character: Model)
+	if data.Player then
+		data.Player.CharacterAdded:Connect(function(char)
 			task.delay(0.5, function()
-				local NewRigType = GetRigType(Character)
-				EntityData.Character = Character
-				EntityData.PrimaryPart = Character.PrimaryPart or Character:FindFirstChild("Head")
-				EntityData.BodyParts = GetBodyParts(EntityData, NewRigType)
-				EntityData.SkeletonStructure = GetSkeletonStruct(NewRigType)
-				EntityData.Position = Vector3.new(0, 0, 0)
-				EntityData.Velocity = Vector3.new(0, 0, 0)
-				EntityData._LastUpdate = 0
+				C.Character[id] = char
+				C.PrimaryPart[id] = char.PrimaryPart or char:FindFirstChild("Head")
+				C.Humanoid[id] = char:FindFirstChildOfClass("Humanoid")
+				C.BodyParts[id] = GetBodyParts(char, GetRigType(char))
+				C.Skeleton[id] = GetSkeletonStruct(GetRigType(char))
+				C.Position[id] = Vector3.new(0, 0, 0)
+				C.Velocity[id] = Vector3.new(0, 0, 0)
+				C.LastUpdate[id] = 0
 			end)
 		end)
 	end
 
-	Module.Entities[Character] = EntityData
-	Module:OnChanged(Module.Entities[Character], "Added")
-	return true
+	table.insert(self.Entities, id)
+	self:TriggerCallbacks(id, "Added")
 end
 
-function Module:Unregister(Key)
-	Module:OnChanged(Module.Entities[Key], "Removed")
-	local Existing = Module.Entities[Key]
-	if not Existing then
-		return
+function ECS:Unregister(id)
+	self:TriggerCallbacks(id, "Removed")
+	local C = self.Components
+	for _, comp in pairs(C) do
+		comp[id] = nil
 	end
-
-	for _, Connection in pairs(Existing._Connections) do
-		pcall(function(...)
-			Connection:Disconnect()
-			Connection = nil
-		end)
-	end
-
-	Module.Entities[Key] = nil
-end
-
-function Module:OnChanged(Player, State)
-	if Player.Name == Module:GetLocalPlayer().Name then
-		print("returned early")
-		return
-	end
-
-	print(`Processed {Player.Name} State: {State}`)
-	if State == "Added" then
-		for _, AddedCallback in pairs(Module.Callbacks.Added) do
-			AddedCallback(Player)
-		end
-	elseif State == "Removed" then
-		for _, RemovedCallback in pairs(Module.Callbacks.Removed) do
-			RemovedCallback(Player)
+	for i, eid in ipairs(self.Entities) do
+		if eid == id then
+			table.remove(self.Entities, i)
+			break
 		end
 	end
 end
 
-function Module:OnEntityAdded(Callback)
-	print("CALBACK ADDED REGIST")
-	table.insert(Module.Callbacks.Added, Callback)
+-- Callbacks
+function ECS:OnEntityAdded(fn)
+	table.insert(self.Callbacks.Added, fn)
+end
+function ECS:OnEntityRemoved(fn)
+	table.insert(self.Callbacks.Removed, fn)
+end
+function ECS:TriggerCallbacks(id, state)
+	local view = self:GetEntityView(id)
+	if state == "Added" then
+		for _, fn in pairs(self.Callbacks.Added) do
+			fn(view)
+		end
+	elseif state == "Removed" then
+		for _, fn in pairs(self.Callbacks.Removed) do
+			fn(view)
+		end
+	end
 end
 
-function Module:OnEntityRemoved(Callback)
-	print("CALBACK REMOV REGIST")
-	table.insert(Module.Callbacks.Removed, Callback)
-end
-
-function Module:Load()
-	for _, Player in pairs(Players:GetPlayers()) do
-		SecureCall(function(...): ...any
-			local Character = Player.Character
-			Module:Register(Player.Name, {
-				Player = Player,
-				Character = Character or nil,
-				PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-				Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-				Name = Player.Name,
-				DisplayName = Player.DisplayName,
-			})
-		end)
+function ECS:UpdateEntity(id)
+	local C = self.Components
+	local now = tick() * 1000
+	if C.LastUpdate[id] and (now - C.LastUpdate[id]) < (Globals.Flags.Settings.EntityCacheUpdate or 100) then
+		return
 	end
 
-	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
-		local Character = Player.Character
-		Module:Register(Player.Name, {
-			Player = Player,
-			Character = Character or nil,
-			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Humanoid = Character and Character:FindFirstChildOfClass("Humanoid") or nil,
-			Name = Player.Name,
-			DisplayName = Player.DisplayName,
+	local primary = C.PrimaryPart[id]
+	if primary then
+		C.Position[id] = primary.Position
+		C.Velocity[id] = primary.AssemblyLinearVelocity
+	end
+
+	local humanoid = C.Humanoid[id]
+	if humanoid then
+		C.Health[id] = humanoid.Health
+	elseif C.Health[id] == nil then
+		C.Health[id] = 0
+	end
+
+	C.IsAlive[id] = (C.Health[id] > 0)
+
+	local playerTeam = C.Player[id] and C.Player[id].Team or "Neutral"
+	C.Team[id] = playerTeam
+	C.TeamColor[id] = C.Player[id] and C.Player[id].TeamColor or nil
+	C.IsEnemy[id] = (playerTeam ~= self.Components.Team[LocalPlayer.Name])
+
+	local fn = C.CustomUpdate[id]
+	if fn then
+		task.spawn(fn, self:GetEntityView(id))
+	end
+
+	C.LastUpdate[id] = now
+end
+
+function ECS:UpdateAll()
+	for _, id in ipairs(self.Entities) do
+		self:UpdateEntity(id)
+	end
+end
+
+function ECS:GetLocalPlayer()
+	return self:GetEntityView(LocalPlayer.Name)
+end
+
+function ECS:Load()
+	for _, player in ipairs(Players:GetPlayers()) do
+		self:Register(player.Name, {
+			Player = player,
+			Character = player.Character,
+			Humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid"),
+			PrimaryPart = player.Character
+				and (player.Character.PrimaryPart or player.Character:FindFirstChild("Head")),
+			Name = player.Name,
+			DisplayName = player.DisplayName,
+		})
+	end
+
+	Cheat:Connect(Players.PlayerAdded, function(player)
+		self:Register(player.Name, {
+			Player = player,
+			Character = player.Character,
+			Humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid"),
+			PrimaryPart = player.Character
+				and (player.Character.PrimaryPart or player.Character:FindFirstChild("Head")),
+			Name = player.Name,
+			DisplayName = player.DisplayName,
 		})
 	end)
 
-	Cheat:Connect(Players.PlayerRemoving, function(Player: Player, a1: Enum.PlayerExitReason)
-		Module:Unregister(Player.Name)
+	Cheat:Connect(Players.PlayerRemoving, function(a0: Player, a1: Enum.PlayerExitReason)
+		self:Unregister(a0.Name)
 	end)
 
 	Cheat:Connect(RunService.Heartbeat, function(a0: number)
-		if not Globals then
-			return
-		end
-
-		local Now = tick() * 1000
-
-		for _, EntityObject in pairs(Module.Entities) do
-			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
-				EntityObject._LastUpdate = Now
-			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate then
-				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
-				EntityObject._LastUpdate = Now
-			end
-		end
+		self:UpdateAll()
 	end)
 end
 
-function Module:Unload()
-	for Registered, _ in pairs(Module.Entities) do
-		Module:Unregister(Registered)
+function ECS:Unload()
+	for _, id in ipairs(self.Entities) do
+		self:Unregister(id)
 	end
-
-	for _, Callback in pairs(Module.Callbacks.Added) do
-		Callback = nil
-	end
-
-	for _, Callback in pairs(Module.Callbacks.Removed) do
-		Callback = nil
-	end
+	self.Callbacks.Added = {}
+	self.Callbacks.Removed = {}
 end
 
-getgenv().Entity = Module
-return Module
+getgenv().Entity = ECS
+return ECS
