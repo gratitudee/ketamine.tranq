@@ -286,16 +286,16 @@ function Module:Load()
 end
 
 function Module:Unload()
+	for Registered, _ in pairs(Module.Entities) do
+		Module:Unregister(Registered)
+	end
+
 	for _, Callback in pairs(Module.Callbacks.Added) do
 		Callback = nil
 	end
 
 	for _, Callback in pairs(Module.Callbacks.Removed) do
 		Callback = nil
-	end
-
-	for Registered, _ in pairs(Module.Entities) do
-		Module:Unregister(Registered)
 	end
 end
 
