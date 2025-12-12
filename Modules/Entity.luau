@@ -119,7 +119,9 @@ end
 
 function Module:_UpdateEntity(EntityObject)
 	if not EntityObject.PrimaryPart then
-		EntityObject.PrimaryPart = EntityObject.Character.PrimaryPart or EntityObject.Character:FindFirstChild("Head")
+		EntityObject.PrimaryPart = EntityObject.Character and EntityObject.Character.PrimaryPart
+			or EntityObject.Character:FindFirstChild("Head")
+		return
 	end
 
 	EntityObject.Position = EntityObject.PrimaryPart.Position
