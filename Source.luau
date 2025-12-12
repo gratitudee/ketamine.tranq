@@ -152,6 +152,13 @@ end
 
 -- Runtime Functions
 function Globals:Load()
+	local Success, Result = SecureCall(BuildMenu)
+	if not Success then
+		DebugNotify(Result)
+		Globals:Unload()
+		return
+	end
+
 	for _, Module in pairs(Modules) do
 		local Success, _ = SecureCall(Module.Load, Module)
 		if not Success then
@@ -159,13 +166,6 @@ function Globals:Load()
 			Globals:Unload()
 			break
 		end
-	end
-
-	local Success, Result = SecureCall(BuildMenu)
-	if not Success then
-		DebugNotify(Result)
-		Globals:Unload()
-		return
 	end
 end
 

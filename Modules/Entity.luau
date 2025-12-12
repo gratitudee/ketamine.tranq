@@ -231,10 +231,12 @@ function Module:OnChanged(Player, State)
 end
 
 function Module:OnEntityAdded(Callback)
+	print("CALBACK ADDED REGIST")
 	table.insert(Module.Callbacks.Added, Callback)
 end
 
 function Module:OnEntityRemoved(Callback)
+	print("CALBACK REMOV REGIST")
 	table.insert(Module.Callbacks.Removed, Callback)
 end
 
