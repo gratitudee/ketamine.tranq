@@ -1,6 +1,5 @@
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
-local Cheat = require("./Modules/Cheat")
 
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
