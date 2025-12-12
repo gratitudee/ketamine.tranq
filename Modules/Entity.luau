@@ -273,10 +273,12 @@ function Module:Load()
 		local Now = tick() * 1000
 		for _, EntityObject in pairs(Module.Entities) do
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				SecureCall(Module._UpdateEntity, Module, EntityObject)
+				print(Module._UpdateEntity)
+				--SecureCall(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 100 then
-				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
+				print(Module._UpdateEntity)
+				--SecureSpawn(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
 		end
