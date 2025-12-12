@@ -128,12 +128,12 @@ function Module:_UpdateEntity(EntityObject)
 	end
 
 	-- TODO: Support custom raycast origin 👍
-	local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstChildOfClass("Camera").CFrame.Position)
+	-- local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstChildOfClass("Camera").CFrame.Position)
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
-	EntityObject.IsVisible = Visible
+	-- EntityObject.IsVisible = Visible
 
-	print(`{EntityObject.Name} is {Visible and "Visible" or "Not Visible"}`)
+	-- print(`{EntityObject.Name} is {Visible and "Visible" or "Not Visible"}`)
 
 	if EntityObject.CustomUpdate then
 		SecureSpawn(EntityObject.CustomUpdate, EntityObject)
