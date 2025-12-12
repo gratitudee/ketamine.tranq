@@ -38,4 +38,5 @@ end
 function Utility:Load() end
 function Utility:Unload() end
 
+getgenv().Utility = Utility
 return Utility
