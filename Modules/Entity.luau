@@ -1,5 +1,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Utility = require("./Utility")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -126,8 +128,12 @@ function Module:_UpdateEntity(EntityObject)
 		return
 	end
 
+	local Visible = Utility:Raycast(EntityObject.PrimaryPart, Workspace:FindFirstAncestorOfClass("Camera"))
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
+	EntityObject.IsVisible = Visible
+
+	print(`{EntityObject.Name} is {Visible and "Visible" or "Not Visible"}`)
 
 	if EntityObject.CustomUpdate then
 		SecureSpawn(EntityObject.CustomUpdate, EntityObject)
