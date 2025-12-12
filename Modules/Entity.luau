@@ -218,6 +218,7 @@ function Module:OnChanged(Player, State)
 		return
 	end
 
+	print(`Processed {Player.Name} State: {State}`)
 	if State == "Added" then
 		for _, AddedCallback in pairs(Module.Callbacks.Added) do
 			AddedCallback(Player)
