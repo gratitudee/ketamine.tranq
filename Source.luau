@@ -46,13 +46,23 @@ local function BuildMenu()
 
 		local PlayerWhitelistButton = PlayerGroupBox:AddButton({
 			Text = "Whitelist Player",
-			Func = function() end,
+			Func = function()
+				if not Options.EntityDropdown.Value then
+					DebugNotify("Failed To Whitelist - No Player Selected.")
+					return
+				end
+			end,
 			Disabled = false,
 		})
 
 		local PlayerSpectateButton = PlayerWhitelistButton:AddButton({
 			Text = "Spectate Player",
-			Func = function() end,
+			Func = function()
+				if not Options.EntityDropdown.Value then
+					DebugNotify("Failed To Spectate - No Player Selected.")
+					return
+				end
+			end,
 			Disabled = false,
 		})
 
@@ -65,15 +75,13 @@ local function BuildMenu()
 
 		local TeamWhitelistButton = TeamGroupbox:AddButton({
 			Text = "Whitelist Team",
-			Func = function() end,
+			Func = function()
+				if not Options.TeamDropdown.Value then
+					DebugNotify("Failed To Whitelist - No Team Selected")
+				end
+			end,
 			Disabled = false,
 		})
-
-		Cheat:Connect(RunService.Heartbeat, function(a0: number)
-			PlayerWhitelistButton.Disabled = Options.EntityDropdown.Value == nil
-			PlayerSpectateButton.Disabled = Options.EntityDropdown.Value == nil
-			TeamWhitelistButton.Disabled = Options.TeamDropdown.Value == nil
-		end)
 
 		Entity:OnEntityAdded(function(Player)
 			local Values = Options.EntityDropdown.Values
