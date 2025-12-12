@@ -117,11 +117,12 @@ local function BuildMenu()
 		}
 
 		local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+		local RightGroup = Tabs.Settings:AddRightGroupbox("Settings")
 		SettingsGroup:AddToggle("ShowWatermark", {
 			Default = Watermark.Enabled,
 			Text = "Show Watermark",
 			Callback = function(value)
-				Watermark.Enabled = value
+				Interface.Library:SetWatermarkVisibility(value)
 			end,
 		})
 		SettingsGroup:AddToggle("KeybindMenuOpen", {
@@ -145,6 +146,18 @@ local function BuildMenu()
 		SettingsGroup:AddButton("Unload", function()
 			Globals:Unload()
 		end)
+
+		RightGroup:AddSlider("EntityCacheRate", {
+			Text = "Entity Update Rate",
+			Default = Globals.Flags.Settings.EntityCacheUpdate,
+			Prefix = "ms",
+			Min = 0,
+			Max = 10,
+			Rounding = 0,
+			Callback = function(value)
+				Globals.Flags.Settings.EntityCacheUpdate = tonumber(value)
+			end,
+		})
 
 		Cheat:Connect(RunService.Heartbeat, function(a0: number)
 			if not Watermark.Enabled then
