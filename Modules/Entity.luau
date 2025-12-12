@@ -211,10 +211,12 @@ function Module:Unregister(Key)
 			Connection = nil
 		end)
 	end
+
+	Module.Entities[Key] = nil
 end
 
 function Module:OnChanged(Player, State)
-	if Player.Name == LocalPlayer.Name then
+	if Player.Name == Module:GetLocalPlayer().Name then
 		print("returned early")
 		return
 	end

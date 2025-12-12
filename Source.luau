@@ -59,7 +59,7 @@ local function BuildMenu()
 
 		Entity:OnEntityRemoved(function(Player)
 			local Values = Options.EntityDropdown.Values
-			table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
+			table.remove(Values, table.find(Values, Player.Name))
 			Options.EntityDropdown:SetValues(Values)
 		end)
 	end
@@ -160,8 +160,8 @@ function Globals:Load()
 	end
 
 	for _, Module in pairs(Modules) do
-		local Success, _ = SecureCall(Module.Load, Module)
-		if not Success then
+		local Success2, _ = SecureCall(Module.Load, Module)
+		if not Success2 then
 			DebugNotify("Failed to load, Unloading.")
 			Globals:Unload()
 			break
