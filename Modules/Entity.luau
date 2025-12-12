@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Cheat = require("./Cheat")
+local Utility = require("./Utility")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -32,6 +33,13 @@ local DefaultSkeletons = {
 	},
 }
 
+local CubeCorners = {
+	Vector3.new(0, -1, -1),
+	Vector3.new(0, -1, 1),
+	Vector3.new(0, 1, -1),
+	Vector3.new(0, 1, 1),
+}
+
 -- Utilities
 local function GetRigType(character)
 	if not character then
@@ -49,19 +57,18 @@ local function GetSkeletonStruct(RigType)
 	return DefaultSkeletons[RigType] or nil
 end
 
-local function GetBodyParts(character, RigType)
+local function GetBodyPartNames(character, RigType)
 	if not character then
-		return nil
+		return {}
 	end
-
-	local limbs
 	if RigType == "R6" then
-		limbs = { "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }
+		return { "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }
 	elseif RigType == "R15" then
-		limbs = {
+		return {
 			"Head",
 			"UpperTorso",
 			"LowerTorso",
+			"HumanoidRootPart",
 			"LeftUpperArm",
 			"LeftLowerArm",
 			"LeftHand",
@@ -76,18 +83,33 @@ local function GetBodyParts(character, RigType)
 			"RightFoot",
 		}
 	else
-		limbs = character.BodyParts or {}
+		return character.BodyParts or {}
 	end
+end
 
+local function GetBones(character, bodyParts)
 	local parts = {}
-	for _, name in ipairs(limbs) do
-		local part = character:FindFirstChild(name)
-		parts[name] = part
+	for _, name in ipairs(bodyParts) do
+		parts[name] = character:FindFirstChild(name)
 	end
 	return parts
 end
 
--- ECS Module
+local function GetSkeletonBones(bonesTable, skeletonStruct)
+	local skeletonBones = {}
+	if not bonesTable or not skeletonStruct then
+		return {}
+	end
+	for _, pair in ipairs(skeletonStruct) do
+		local partA = bonesTable[pair[1]]
+		local partB = bonesTable[pair[2]]
+		if partA and partB then
+			table.insert(skeletonBones, { partA, partB })
+		end
+	end
+	return skeletonBones
+end
+
 local ECS = {
 	Entities = {},
 	Components = {
@@ -100,7 +122,9 @@ local ECS = {
 		Team = {},
 		TeamColor = {},
 		BodyParts = {},
+		Bones = {},
 		Skeleton = {},
+		BoundingBox = {},
 		IsAlive = {},
 		IsEnemy = {},
 		CustomUpdate = {},
@@ -112,7 +136,6 @@ local ECS = {
 	Callbacks = { Added = {}, Removed = {} },
 }
 
--- Proxy entity view
 function ECS:GetEntityView(id)
 	return setmetatable({ id = id, ECS = self }, {
 		__index = function(t, key)
@@ -133,6 +156,65 @@ function ECS:GetEntityView(id)
 	})
 end
 
+function ECS:CalculateBoundingBox(id)
+	local C = self.Components
+	local primary = C.PrimaryPart[id]
+	if not primary then
+		return nil
+	end
+
+	local _, onScreen1 = Utility:WorldToScreen(primary.Position)
+	if not onScreen1 then
+		return nil
+	end
+
+	local bones = C.Bones[id]
+	if not bones or not next(bones) then
+		return nil
+	end
+
+	local minX, minY = math.huge, math.huge
+	local maxX, maxY = -math.huge, -math.huge
+	local foundVisible = false
+
+	for _, part in pairs(bones) do
+		if part and part:IsA("BasePart") then
+			local cf = part.CFrame
+			local halfSize = part.Size * 0.5
+
+			for _, corner in ipairs(CubeCorners) do
+				local worldPos = cf:PointToWorldSpace(halfSize * corner)
+				local screenPos, onScreen = Utility:WorldToScreen(worldPos)
+				if onScreen then
+					foundVisible = true
+					minX = math.min(minX, screenPos.X)
+					maxX = math.max(maxX, screenPos.X)
+					minY = math.min(minY, screenPos.Y)
+					maxY = math.max(maxY, screenPos.Y)
+				end
+			end
+		end
+	end
+
+	if not foundVisible then
+		return nil
+	end
+
+	local width = maxX - minX
+	local height = maxY - minY
+	local padX = width * 0.15
+	local padY = height * 0.1
+
+	local box = {
+		X = minX - padX,
+		Y = minY - padY,
+		W = width + padX * 2,
+		H = height + padY * 2,
+	}
+
+	return box
+end
+
 function ECS:Register(id, data)
 	if not data.Player then
 		if not data.Character or not data.PrimaryPart or not data.Name then
@@ -140,6 +222,7 @@ function ECS:Register(id, data)
 		end
 	end
 
+	local rigType = GetRigType(data.Character)
 	local C = self.Components
 	C.Character[id] = data.Character or nil
 	C.PrimaryPart[id] = data.PrimaryPart or (data.Character and data.Character:FindFirstChild("Head"))
@@ -154,8 +237,10 @@ function ECS:Register(id, data)
 	C.Position[id] = Vector3.new(0, 0, 0)
 	C.Velocity[id] = Vector3.new(0, 0, 0)
 	C.LastUpdate[id] = 0
-	C.BodyParts[id] = GetBodyParts(data.Character, GetRigType(data.Character))
-	C.Skeleton[id] = GetSkeletonStruct(GetRigType(data.Character))
+	C.BodyParts[id] = GetBodyPartNames(data.Character, rigType)
+	C.Bones[id] = GetBones(data.Character, C.BodyParts[id])
+	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
+	C.BoundingBox[id] = ECS:CalculateBoundingBox(id)
 	C.IsAlive[id] = true
 	C.IsEnemy[id] = false
 
@@ -165,8 +250,13 @@ function ECS:Register(id, data)
 				C.Character[id] = char
 				C.PrimaryPart[id] = char.PrimaryPart or char:FindFirstChild("Head")
 				C.Humanoid[id] = char:FindFirstChildOfClass("Humanoid")
-				C.BodyParts[id] = GetBodyParts(char, GetRigType(char))
-				C.Skeleton[id] = GetSkeletonStruct(GetRigType(char))
+
+				local rigType = GetRigType(char)
+				C.BodyParts[id] = GetBodyPartNames(char, rigType)
+				C.Bones[id] = GetBones(char, C.BodyParts[id])
+				C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
+				C.BoundingBox[id] = ECS:CalculateBoundingBox(id)
+
 				C.Position[id] = Vector3.new(0, 0, 0)
 				C.Velocity[id] = Vector3.new(0, 0, 0)
 				C.LastUpdate[id] = 0
@@ -238,10 +328,11 @@ function ECS:UpdateEntity(id)
 	C.Team[id] = playerTeam
 	C.TeamColor[id] = C.Player[id] and C.Player[id].TeamColor or nil
 	C.IsEnemy[id] = (playerTeam ~= self.Components.Team[LocalPlayer.Name])
+	C.BoundingBox[id] = self:CalculateBoundingBox(id)
 
 	local fn = C.CustomUpdate[id]
 	if fn then
-		task.spawn(fn, self:GetEntityView(id))
+		SecureCall(fn, self:GetEntityView(id))
 	end
 
 	C.LastUpdate[id] = now
