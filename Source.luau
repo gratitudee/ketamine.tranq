@@ -1,5 +1,6 @@
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
+local Cheat = require("./Modules/Cheat")
 
 local Interface, Modules = Ketamine.Interface, Ketamine.Modules
 local Options = Interface.Library.Options
@@ -44,12 +45,29 @@ local function BuildMenu()
 			AllowNull = true,
 		})
 
+		local PlayerWhitelistButton = PlayerGroupBox:AddButton({
+			Text = "Whitelist Player",
+			Func = function() end,
+			Disabled = false,
+		})
+
 		TeamGroupbox:AddDropdown("TeamDropdown", {
 			SpecialType = "Team",
 			Text = "Teams",
 			Searchable = true,
 			AllowNull = true,
 		})
+
+		local TeamWhitelistButton = TeamGroupbox:AddButton({
+			Text = "Whitelist Team",
+			Func = function() end,
+			Disabled = false,
+		})
+
+		Cheat:Connect(RunService.Heartbeat, function(a0: number)
+			PlayerWhitelistButton.Disabled = Options.EntityDropdown.Value == nil
+			TeamWhitelistButton.Disabled = Options.TeamDropdown.Value == nil
+		end)
 
 		Entity:OnEntityAdded(function(Player)
 			local Values = Options.EntityDropdown.Values
