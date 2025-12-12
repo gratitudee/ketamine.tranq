@@ -155,6 +155,7 @@ end
 function Module:Register(Character, Data)
 	if not Character or not Data.PrimaryPart or not Data.Name then
 		DebugNotify(`[REGISTER] | Critical Information Missing`)
+		print(`{Character} {Data.PrimaryPart} {Data.Name}`)
 		return false
 	end
 
