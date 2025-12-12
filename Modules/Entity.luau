@@ -47,8 +47,8 @@ local function GetSkeletonStruct(RigType)
 	return DefaultSkeletons[RigType] or nil
 end
 
-local function GetBodyParts(Entity, RigType: "R6" | "R15" | "Unknown")
-	if not Entity then
+local function GetBodyParts(Character, RigType: "R6" | "R15" | "Unknown")
+	if not Character then
 		return nil
 	end
 
@@ -81,13 +81,13 @@ local function GetBodyParts(Entity, RigType: "R6" | "R15" | "Unknown")
 			"RightFoot",
 		}
 	elseif RigType == "Unknown" then
-		limbs = Entity.BodyParts or {}
+		limbs = Character.BodyParts or {}
 	end
 
 	local Parts = {}
 	for _, Name in ipairs(limbs) do
-		if Entity.Character then
-			local Part = Entity.Character:FindFirstChild("Limbs")
+		if Character.Character then
+			local Part = Character.Character:FindFirstChild("Limbs")
 			Parts[Name] = Part and Part or nil
 		end
 	end
@@ -95,7 +95,7 @@ local function GetBodyParts(Entity, RigType: "R6" | "R15" | "Unknown")
 	return Parts
 end
 
-local Entity = {
+local Module = {
 	Entities = {},
 	Connections = {},
 	Callbacks = {
@@ -104,10 +104,10 @@ local Entity = {
 	},
 }
 
-function Entity:GetLocalPlayer()
+function Module:GetLocalPlayer()
 	local Character = LocalPlayer.Character
-	return Entity.Entities[LocalPlayer.Name]
-		or Entity:Register(LocalPlayer.Name, {
+	return Module.Entities[LocalPlayer.Name]
+		or Module:Register(LocalPlayer.Name, {
 			Player = LocalPlayer,
 			Character = Character or nil,
 			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
@@ -117,7 +117,7 @@ function Entity:GetLocalPlayer()
 		})
 end
 
-function Entity:_UpdateEntity(EntityObject)
+function Module:_UpdateEntity(EntityObject)
 	EntityObject.Position = EntityObject.PrimaryPart.Position
 	EntityObject.Velocity = EntityObject.PrimaryPart.AssemblyLinearVelocity
 
@@ -145,13 +145,13 @@ function Entity:_UpdateEntity(EntityObject)
 	if EntityObject.Team == "Neutral" then
 		EntityObject.IsEnemy = true
 	else
-		EntityObject.IsEnemy = (self.Team ~= Entity:GetLocalPlayer().Team)
+		EntityObject.IsEnemy = (self.Team ~= Module:GetLocalPlayer().Team)
 	end
 
 	SecureSpawn(EntityObject.CustomUpdate, EntityObject)
 end
 
-function Entity:Register(Character, Data)
+function Module:Register(Character, Data)
 	if not Character or not Data.PrimaryPart or not Data.Name then
 		return false
 	end
@@ -165,7 +165,7 @@ function Entity:Register(Character, Data)
 		Player = Data.Player,
 		Name = Data.Name,
 		DisplayName = Data.DisplayName or Data.Name,
-		BodyParts = GetBodyParts(Entity, RigType),
+		BodyParts = GetBodyParts(Module, RigType),
 		SkeletonStructure = Data.SkeletonStruct or GetSkeletonStruct(RigType),
 		Health = 0,
 		Position = Vector3.new(0, 0, 0),
@@ -190,14 +190,14 @@ function Entity:Register(Character, Data)
 		end)
 	end
 
-	Entity.Entities[Character] = EntityData
-	Entity:OnChanged(Entity.Entities[Character], "Added")
+	Module.Entities[Character] = EntityData
+	Module:OnChanged(Module.Entities[Character], "Added")
 	return true
 end
 
-function Entity:Unregister(Key)
-	Entity:OnChanged(Entity.Entities[Key], "Removed")
-	local Existing = Entity.Entities[Key]
+function Module:Unregister(Key)
+	Module:OnChanged(Module.Entities[Key], "Removed")
+	local Existing = Module.Entities[Key]
 	if not Existing then
 		return
 	end
@@ -210,35 +210,35 @@ function Entity:Unregister(Key)
 	end
 end
 
-function Entity:OnChanged(Player, State)
+function Module:OnChanged(Player, State)
 	if Player.Name == LocalPlayer.Name then
 		return
 	end
 
 	if State == "Added" then
-		for _, AddedCallback in pairs(Entity.Callbacks.Added) do
+		for _, AddedCallback in pairs(Module.Callbacks.Added) do
 			AddedCallback(Player)
 		end
 	elseif State == "Removed" then
-		for _, RemovedCallback in pairs(Entity.Callbacks.Removed) do
+		for _, RemovedCallback in pairs(Module.Callbacks.Removed) do
 			RemovedCallback(Player)
 		end
 	end
 end
 
-function Entity:OnEntityAdded(Callback)
-	table.insert(Entity.Callbacks.Added, Callback)
+function Module:OnEntityAdded(Callback)
+	table.insert(Module.Callbacks.Added, Callback)
 end
 
-function Entity:OnEntityRemoved(Callback)
-	table.insert(Entity.Callbacks.Removed, Callback)
+function Module:OnEntityRemoved(Callback)
+	table.insert(Module.Callbacks.Removed, Callback)
 end
 
-function Entity:Load()
+function Module:Load()
 	for _, Player in pairs(Players:GetPlayers()) do
 		SecureCall(function(...): ...any
 			local Character = Player.Character
-			Entity:Register(Player.Name, {
+			Module:Register(Player.Name, {
 				Player = Player,
 				Character = Character or nil,
 				PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
@@ -251,7 +251,7 @@ function Entity:Load()
 
 	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
 		local Character = Player.Character
-		Entity:Register(Player.Name, {
+		Module:Register(Player.Name, {
 			Player = Player,
 			Character = Character or nil,
 			PrimaryPart = Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
@@ -262,7 +262,7 @@ function Entity:Load()
 	end)
 
 	Cheat:Connect(Players.PlayerRemoving, function(Player: Player, a1: Enum.PlayerExitReason)
-		Entity:Unregister(Player.Name)
+		Module:Unregister(Player.Name)
 	end)
 
 	Cheat:Connect(RunService.Heartbeat, function(a0: number)
@@ -271,31 +271,31 @@ function Entity:Load()
 		end
 
 		local Now = tick() * 1000
-		for _, EntityObject in pairs(Entity.Entities) do
+		for _, EntityObject in pairs(Module.Entities) do
 			if not EntityObject._LastUpdate or EntityObject._LastUpdate == 0 then
-				SecureCall(Entity._UpdateEntity, Entity, EntityObject)
+				SecureCall(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			elseif (Now - EntityObject._LastUpdate) >= Globals.Flags.Settings.EntityCacheUpdate * 100 then
-				SecureSpawn(Entity._UpdateEntity, Entity, EntityObject)
+				SecureSpawn(Module._UpdateEntity, Module, EntityObject)
 				EntityObject._LastUpdate = Now
 			end
 		end
 	end)
 end
 
-function Entity:Unload()
-	for _, Callback in pairs(Entity.Callbacks.Added) do
+function Module:Unload()
+	for _, Callback in pairs(Module.Callbacks.Added) do
 		Callback = nil
 	end
 
-	for _, Callback in pairs(Entity.Callbacks.Removed) do
+	for _, Callback in pairs(Module.Callbacks.Removed) do
 		Callback = nil
 	end
 
-	for Registered, _ in pairs(Entity.Entities) do
-		Entity:Unregister(Registered)
+	for Registered, _ in pairs(Module.Entities) do
+		Module:Unregister(Registered)
 	end
 end
 
-getgenv().Entity = Entity
-return Entity
+getgenv().Entity = Module
+return Module
