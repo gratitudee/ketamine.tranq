@@ -164,6 +164,7 @@ local ECS = {
 		IsAlive = {},
 		IsEnemy = {},
 		CustomUpdate = {},
+		RigType = {},
 		Player = {},
 		LastUpdate = {},
 		DisplayName = {},
@@ -298,9 +299,10 @@ local function SetupCharacterUpdate(self, id, char)
 	C.Humanoid[id] = char:FindFirstChildOfClass("Humanoid")
 
 	local rigType = GetRigType(char)
+	C.RigType[id] = rigType
 	C.BodyParts[id] = GetBodyPartNames(char, rigType)
 	C.Bones[id] = GetBones(char, C.BodyParts[id])
-	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
+	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType), rigType)
 	C.BoundingBox[id] = self:CalculateBoundingBox(id)
 
 	C.Position[id] = Vector3.zero
@@ -331,6 +333,7 @@ function ECS:Register(id, data)
 	C.Position[id] = Vector3.zero
 	C.Velocity[id] = Vector3.zero
 	C.LastUpdate[id] = 0
+	C.RigType[id] = rigType
 	C.BodyParts[id] = GetBodyPartNames(data.Character, rigType)
 	C.Bones[id] = GetBones(data.Character, C.BodyParts[id])
 	C.Skeleton[id] = GetSkeletonBones(C.Bones[id], GetSkeletonStruct(rigType))
