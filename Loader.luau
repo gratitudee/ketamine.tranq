@@ -2,6 +2,7 @@ getgenv().Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/re
 
 getgenv().SecureCall = function(f, ...)
 	if typeof(f) ~= "function" then
+		print(...)
 		print(`[KETAMINE.TRANQ]: Function expected got {typeof(f)}`)
 		return
 	end
@@ -16,6 +17,7 @@ getgenv().SecureCall = function(f, ...)
 end
 
 getgenv().SecureSpawn = function(f, ...)
+	print(...)
 	task.spawn(SecureCall, f, ...)
 end
 
