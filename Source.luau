@@ -51,13 +51,13 @@ local function BuildMenu()
 			AllowNull = true,
 		})
 
-		Modules.Entity:OnEntityAdded(function(Player)
+		Entity:OnEntityAdded(function(Player)
 			local Values = Options.EntityDropdown.Values
 			table.insert(Values, Player.Name)
 			Options.EntityDropdown:SetValues(Values)
 		end)
 
-		Modules.Entity:OnEntityRemoved(function(Player)
+		Entity:OnEntityRemoved(function(Player)
 			local Values = Options.EntityDropdown.Values
 			table.remove(Values, table.remove(Values, table.find(Values, Player.Name)))
 			Options.EntityDropdown:SetValues(Values)
