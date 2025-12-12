@@ -227,11 +227,7 @@ function Globals:Load()
 	end
 
 	for _, Module in pairs(Modules) do
-		local Success2, _ = SecureCall(Module.Load, Module)
-		if not Success2 then
-			Globals:Unload()
-			break
-		end
+		SecureCall(Module.Load, Module)
 	end
 end
 

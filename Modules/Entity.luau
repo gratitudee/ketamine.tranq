@@ -5,11 +5,11 @@ local LocalPlayer = Players.LocalPlayer
 
 local DefaultSkeletons = {
 	["R6"] = {
-		{ "Head", "Torso" },
-		{ "Torso", "Left Arm" },
-		{ "Torso", "Right Arm" },
-		{ "Torso", "Left Leg" },
-		{ "Torso", "Right Leg" },
+		{ "Head", "Torso", "top" },
+		{ "Torso", "Left Arm", "left_shoulder" },
+		{ "Torso", "Right Arm", "right_shoulder" },
+		{ "Torso", "Left Leg", "left_hip" },
+		{ "Torso", "Right Leg", "right_hip" },
 	},
 	["R15"] = {
 		{ "Head", "UpperTorso" },
@@ -42,6 +42,30 @@ local math_huge = math.huge
 local table_insert = table.insert
 local table_remove = table.remove
 local os_clock = os.clock
+
+local function GetR6JointPosition(torso, jointType)
+	local cf = torso.CFrame
+	local size = torso.Size
+
+	if jointType == "top" then
+		-- neck
+		return cf * Vector3.new(0, size.Y * 0.5, 0)
+	elseif jointType == "left_shoulder" then
+		-- l shoulder
+		return cf * Vector3.new(-size.X * 0.5, size.Y * 0.3, 0)
+	elseif jointType == "right_shoulder" then
+		-- r shoulder
+		return cf * Vector3.new(size.X * 0.5, size.Y * 0.3, 0)
+	elseif jointType == "left_hip" then
+		-- l hip
+		return cf * Vector3.new(-size.X * 0.3, -size.Y * 0.5, 0)
+	elseif jointType == "right_hip" then
+		-- r hip
+		return cf * Vector3.new(size.X * 0.3, -size.Y * 0.5, 0)
+	end
+
+	return cf.Position
+end
 
 local function GetRigType(character)
 	if not character then
@@ -167,6 +191,45 @@ function ECS:GetEntityView(id)
 			end
 		end,
 	})
+end
+
+function ECS:GetBonePositions(id, boneIndex)
+	local C = self.Components
+	local skeleton = C.Skeleton[id]
+	local rigType = C.RigType[id]
+
+	if not skeleton or not skeleton[boneIndex] then
+		return nil, nil
+	end
+
+	local bone = skeleton[boneIndex]
+	local partA = bone[1]
+	local partB = bone[2]
+	local jointType = bone[3]
+
+	if not partA or not partB then
+		return nil, nil
+	end
+
+	local posA, posB
+
+	if rigType == "R6" and jointType then
+		if partA.Name == "Torso" then
+			posA = GetR6JointPosition(partA, jointType)
+			posB = partB.Position
+		elseif partB.Name == "Torso" then
+			posA = partA.Position
+			posB = GetR6JointPosition(partB, jointType)
+		else
+			posA = partA.Position
+			posB = partB.Position
+		end
+	else
+		posA = partA.Position
+		posB = partB.Position
+	end
+
+	return posA, posB
 end
 
 function ECS:CalculateBoundingBox(id)
