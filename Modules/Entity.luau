@@ -214,6 +214,7 @@ end
 
 function Module:OnChanged(Player, State)
 	if Player.Name == LocalPlayer.Name then
+		print("returned early")
 		return
 	end
 
