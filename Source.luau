@@ -75,7 +75,6 @@ local function BuildMenu()
 			end,
 		}
 
-		Interface.Library.ToggleKeybind = Options.MenuKeybind
 		local SettingsGroup = Tabs.Settings:AddLeftGroupbox("Menu")
 		SettingsGroup:AddToggle("ShowWatermark", {
 			Default = Watermark.Enabled,
@@ -101,7 +100,7 @@ local function BuildMenu()
 		SettingsGroup:AddDivider()
 		SettingsGroup:AddLabel("Menu bind")
 			:AddKeyPicker("MenuKeybind", { Default = "Z", NoUI = true, Text = "Menu keybind" })
-
+		Interface.Library.ToggleKeybind = Options.MenuKeybind
 		SettingsGroup:AddButton("Unload", function()
 			Globals:Unload()
 		end)
