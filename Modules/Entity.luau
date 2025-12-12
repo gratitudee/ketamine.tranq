@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
-local Utility = require("./Utility")
 
 local LocalPlayer = Players.LocalPlayer
 
