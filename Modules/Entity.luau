@@ -14,7 +14,6 @@ local DefaultSkeletons = {
 	["R15"] = {
 		{ "Head", "UpperTorso" },
 		{ "UpperTorso", "LowerTorso" },
-		{ "LowerTorso", "HumanoidRootPart" },
 		{ "UpperTorso", "LeftUpperArm" },
 		{ "LeftUpperArm", "LeftLowerArm" },
 		{ "LeftLowerArm", "LeftHand" },
