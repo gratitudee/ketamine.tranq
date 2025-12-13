@@ -37,11 +37,11 @@ function Ketamine:SecureCall(Function, ...)
 end
 
 function Ketamine:SecureSpawn(Function, ...)
-	task.spawn(SecureCall, Function, ...)
+	task.spawn(Ketamine.SecureCall, Ketamine, Function, ...)
 end
 
 function Ketamine:Import(Path)
-	local Success, Response = Ketamine:SecureCall(request, {
+	local Success, Response = Ketamine:SecureSpawn(request, {
 		Url = `{Ketamine.Repo}{Path}`,
 		Method = "GET",
 	})
