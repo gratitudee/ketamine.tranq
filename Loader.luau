@@ -92,24 +92,27 @@ return function(Options: {
 		Ketamine.Support = GameSupport
 	end
 
-	-- Window Creation
-	Ketamine.Window = Ketamine.Library:CreateWindow({
-		Title = "ketamine.tranq",
-		Center = true,
-		AutoShow = not Ketamine.StreamMode,
-		UnlockMouseWhileOpen = true,
-	})
+	-- small little wait 😀😀
+	task.delay(1, function()
+		-- Window Creation
+		Ketamine.Window = Ketamine.Library:CreateWindow({
+			Title = "ketamine.tranq",
+			Center = true,
+			AutoShow = not Ketamine.StreamMode,
+			UnlockMouseWhileOpen = true,
+		})
 
-	-- Start Dependencies
-	Ketamine:SecureSpawn(Entity.Load, Entity)
-	Ketamine:SecureSpawn(Utility.Load, Utility)
-	Ketamine:SecureSpawn(Draw.Load, Draw)
-	Ketamine:SecureSpawn(Cheat.Load, Cheat)
+		-- Start Dependencies
+		Ketamine:SecureSpawn(Entity.Load, Entity)
+		Ketamine:SecureSpawn(Utility.Load, Utility)
+		Ketamine:SecureSpawn(Draw.Load, Draw)
+		Ketamine:SecureSpawn(Cheat.Load, Cheat)
 
-	-- Start Features
-	Ketamine:SecureSpawn(Aimbot.Load, Aimbot)
-	Ketamine:SecureSpawn(Visuals.Load, Visuals)
-	Ketamine:SecureSpawn(Settings.Load, Settings)
+		-- Start Features
+		Ketamine:SecureSpawn(Aimbot.Load, Aimbot)
+		Ketamine:SecureSpawn(Visuals.Load, Visuals)
+		Ketamine:SecureSpawn(Settings.Load, Settings)
+	end)
 
 	Cheat:OnUnload(function()
 		Ketamine:Notify({
