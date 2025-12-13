@@ -41,7 +41,7 @@ function Ketamine:SecureSpawn(Function, ...)
 end
 
 function Ketamine:Import(Path)
-	local Success, Response = Ketamine:SecureSpawn(request, {
+	local Success, Response = Ketamine:SecureCall(request, {
 		Url = `{Ketamine.Repo}{Path}`,
 		Method = "GET",
 	})
