@@ -2,14 +2,6 @@ if not Ketamine then
 	getgenv().Ketamine = {}
 end
 
-if Ketamine and Ketamine.IsLoaded then
-	Ketamine:Notify({
-		Title = "!",
-		Description = "FAILED TO LOAD: Already loaded.",
-	})
-	return
-end
-
 function Ketamine:Notify(...)
 	if Ketamine and Ketamine.Library and not Ketamine.StreamMode then
 		Ketamine.Library:Notify(...)
@@ -43,12 +35,12 @@ function Ketamine:SecureSpawn(Function, ...)
 end
 
 function Ketamine:Import(Path)
-	local Success, Response = Ketamine:SecureCall(request, {
+	local _, Response = Ketamine:SecureCall(request, {
 		Url = `{Ketamine.Repo}{Path}`,
 		Method = "GET",
 	})
 
-	if not Success then
+	if not Response.Success then
 		return nil
 	end
 
@@ -59,41 +51,39 @@ end
 return function(Options: {
 	StreamMode: boolean,
 })
-	if Ketamine and Ketamine.IsLoaded then
-		Ketamine:Notify({
-			Title = "!",
-			Description = "FAILED TO LOAD: Already loaded.",
-		})
-		return
-	end
+	local Success = Ketamine:SecureCall(function()
+		if Ketamine and Ketamine.IsLoaded then
+			Ketamine:Notify({
+				Title = "!",
+				Description = "FAILED TO LOAD: Already loaded.",
+			})
+			return
+		end
 
-	Ketamine.Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/"
-	Ketamine.IsLoaded = true
-	Ketamine.StreamMode = Options.StreamMode
-	Ketamine.Library = Ketamine:Import("packages/Library.luau")
-	Ketamine.LibraryAddons = {
-		Save = Ketamine:Import("packages/SaveManager.luau"),
-		Theme = Ketamine:Import("packages/ThemeManager.luau"),
-	}
+		Ketamine.Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/"
+		Ketamine.IsLoaded = true
+		Ketamine.StreamMode = Options and Options.StreamMode or false
+		Ketamine.Library = Ketamine:Import("Packages/Library.luau")
+		Ketamine.LibraryAddons = {
+			Save = Ketamine:Import("Packages/SaveManager.luau"),
+			Theme = Ketamine:Import("Packages/ThemeManager.luau"),
+		}
 
-	-- Top Level API
-	getgenv().Entity = Ketamine:Import("modules/Components/Entity.luau")
-	getgenv().Utility = Ketamine:Import("modules/Components/Utility.luau")
-	getgenv().Draw = Ketamine:Import("modules/Components/Draw.luau")
-	getgenv().Cheat = Ketamine:Import("modules/Components/Cheat.luau")
+		-- Top Level API
+		getgenv().Entity = Ketamine:Import("modules/Components/Entity.luau")
+		getgenv().Draw = Ketamine:Import("modules/Components/Draw.luau")
+		getgenv().Cheat = Ketamine:Import("modules/Components/Cheat.luau")
 
-	-- Private Level Cheat Functions
-	local Aimbot = Ketamine:Import("modules/Private/Aimbot.luau")
-	local Visuals = Ketamine:Import("modules/Private/Visuals.luau")
-	local Settings = Ketamine:Import("modules/Private/Settings.luau")
+		-- Private Level Cheat Functions
+		local Aimbot = Ketamine:Import("modules/Private/Aimbot.luau")
+		local Visuals = Ketamine:Import("modules/Private/Visuals.luau")
+		local Settings = Ketamine:Import("modules/Private/Settings.luau")
 
-	local GameSupport = Ketamine:Import(`modules/Support/{game.GameId}`)
-	if GameSupport then
-		Ketamine.Support = GameSupport
-	end
+		local GameSupport = Ketamine:Import(`modules/Support/{game.GameId}`)
+		if GameSupport then
+			Ketamine.Support = GameSupport
+		end
 
-	-- small little wait 😀😀
-	task.delay(1, function()
 		-- Window Creation
 		Ketamine.Window = Ketamine.Library:CreateWindow({
 			Title = "ketamine.tranq",
@@ -103,41 +93,54 @@ return function(Options: {
 		})
 
 		-- Start Dependencies
-		Ketamine:SecureSpawn(Entity.Load, Entity)
-		Ketamine:SecureSpawn(Utility.Load, Utility)
-		Ketamine:SecureSpawn(Draw.Load, Draw)
 		Ketamine:SecureSpawn(Cheat.Load, Cheat)
+		Ketamine:SecureSpawn(Entity.Load, Entity)
+		Ketamine:SecureSpawn(Draw.Load, Draw)
 
 		-- Start Features
 		Ketamine:SecureSpawn(Aimbot.Load, Aimbot)
 		Ketamine:SecureSpawn(Visuals.Load, Visuals)
 		Ketamine:SecureSpawn(Settings.Load, Settings)
-	end)
 
-	Cheat:OnUnload(function()
-		Ketamine:Notify({
-			Title = "!",
-			Description = "Unloading Cheat",
-		})
+		Cheat:OnUnload(function()
+			Ketamine:Notify({
+				Title = "!",
+				Description = "Unloading Cheat",
+			})
 
-		-- Unload Dependencies
-		Ketamine:SecureSpawn(Entity.Unload, Entity)
-		Ketamine:SecureSpawn(Utility.Unload, Utility)
-		Ketamine:SecureSpawn(Draw.Unload, Draw)
-		Ketamine:SecureSpawn(Cheat.Unload, Cheat)
+			-- Unload Dependencies
+			Ketamine:SecureSpawn(Entity.Unload, Entity)
+			Ketamine:SecureSpawn(Draw.Unload, Draw)
+			Ketamine:SecureSpawn(Cheat.Unload, Cheat)
 
-		-- Unload Features
-		Ketamine:SecureSpawn(Aimbot.Unload, Aimbot)
-		Ketamine:SecureSpawn(Visuals.Unload, Visuals)
-		Ketamine:SecureSpawn(Settings.Unload, Settings)
-		Ketamine.Library:Unload()
+			-- Unload Features
+			Ketamine:SecureSpawn(Aimbot.Unload, Aimbot)
+			Ketamine:SecureSpawn(Visuals.Unload, Visuals)
+			Ketamine:SecureSpawn(Settings.Unload, Settings)
+			Ketamine.Library:Unload()
 
-		task.delay(1, function()
-			getgenv().Ketamine = nil
+			task.delay(1, function()
+				getgenv().Ketamine = nil
+			end)
+		end)
+
+		Ketamine.Library:OnUnload(function()
+			Ketamine.Library.Unloaded = true
 		end)
 	end)
 
-	Ketamine.Library:OnUnload(function()
-		Ketamine.Library.Unloaded = true
-	end)
+	if not Success then
+		if Cheat then
+			Ketamine:SecureSpawn(Cheat.Unload, Cheat)
+		end
+
+		if Ketamine and Ketamine.Library then
+			Ketamine.Library:Unload()
+			Ketamine.Library.Unloaded = true
+		end
+
+		if Ketamine then
+			getgenv().Ketamine = nil
+		end
+	end
 end
