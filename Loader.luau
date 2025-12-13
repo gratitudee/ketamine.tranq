@@ -1,3 +1,4 @@
+local Entity = require("./.vscode/OldSRC/Modules/Entity")
 if not Ketamine then
 	getgenv().Ketamine = {}
 end
@@ -45,7 +46,8 @@ function Ketamine:Import(Path)
 	end
 
 	local Function = loadstring(Response.Body)
-	return typeof(Function) == "function" and Function() or nil
+
+	return typeof(Function) == "function" and Ketamine:SecureCall(Function) or nil
 end
 
 return function(Options: {
@@ -82,6 +84,26 @@ return function(Options: {
 		local GameSupport = Ketamine:Import(`modules/Support/{game.GameId}`)
 		if GameSupport then
 			Ketamine.Support = GameSupport
+		end
+
+		local Required = {
+			Ketamine.Library,
+			Ketamine.LibraryAddons.Save,
+			Ketamine.LibraryAddons.Theme,
+			Entity,
+			Draw,
+			Cheat,
+			Aimbot,
+			Visuals,
+			Settings,
+		}
+
+		for _, v in ipairs(Required) do
+			if not v then
+				print(`ABORTED LOADING, MISSING DEPENDENCIES`)
+				getgenv().Ketamine = nil
+				return
+			end
 		end
 
 		-- Window Creation
