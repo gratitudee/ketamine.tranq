@@ -34,6 +34,8 @@ function Ketamine:SecureCall(Function, ...)
 
 		print(`[K.T]: Exception Caught: {Result}, Traceback: {Traceback}`)
 	end
+
+	return Success, Result
 end
 
 function Ketamine:SecureSpawn(Function, ...)
