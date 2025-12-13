@@ -1,27 +1,48 @@
-getgenv().Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/"
+if not Ketamine then
+	getgenv().Ketamine = {}
+end
 
-getgenv().SecureCall = function(f, ...)
-	if typeof(f) ~= "function" then
-		print(`[KETAMINE.TRANQ]: Function expected got {typeof(f)}`)
+if Ketamine and Ketamine.IsLoaded then
+	Ketamine:Notify({
+		Title = "!",
+		Description = "FAILED TO LOAD: Already loaded.",
+	})
+	return
+end
+
+function Ketamine:Notify(...)
+	if Ketamine and Ketamine.Library and not Ketamine.StreamMode then
+		Ketamine.Library:Notify(...)
+	end
+end
+
+function Ketamine:SecureCall(Function, ...)
+	if typeof(Function) ~= "function" then
+		print(`[K.T]: Function expected got {typeof(Function)}`)
 		return
 	end
 
-	local Success, Result = pcall(f, ...)
+	local Success, Result = pcall(Function, ...)
 	if not Success and Result then
 		local Traceback = debug.traceback()
-		print(`[KETAMINE.TRANQ]: Exception Caught: {Result}, Traceback:\n{Traceback}`)
+		if Ketamine.Notify then
+			Ketamine:Notify({
+				Title = "!",
+				Description = "Exception Caught, Check F9 Logs",
+			})
+		end
+
+		print(`[K.T]: Exception Caught: {Result}, Traceback: {Traceback}`)
 	end
-
-	return Success, Result
 end
 
-getgenv().SecureSpawn = function(f, ...)
-	task.spawn(SecureCall, f, ...)
+function Ketamine:SecureSpawn(Function, ...)
+	task.spawn(SecureCall, Function, ...)
 end
 
-getgenv().Import = function(ModulePath)
-	local Success, Response = SecureCall(request, {
-		Url = `{Repo}{ModulePath}`,
+function Ketamine:Import(Path)
+	local Success, Response = Ketamine:SecureSpawn(request, {
+		Url = `{Ketamine.Repo}{Path}`,
 		Method = "GET",
 	})
 
@@ -30,58 +51,88 @@ getgenv().Import = function(ModulePath)
 	end
 
 	local Function = loadstring(Response.Body)
-	return Function and typeof(Function) == "function" and Function() or nil
+	return typeof(Function) == "function" and Function() or nil
 end
 
-getgenv().DebugNotify = function(Message)
-	if not Message then
-		return
-	end
-
-	-- Silent Mode
-	if not Ketamine or Ketamine.StealthMode then
-		return
-	end
-
-	if Library then
-		Library:Notify(Message, 3)
-	end
-end
-
-return function(LaunchOptions: {
-	StealthMode: boolean,
+return function(Options: {
+	StreamMode: boolean,
 })
-	if Ketamine and Ketamine.Loaded then
-		DebugNotify({
-			Title = "ERROR",
-			Description = "Ketamine Is Already Loaded..",
+	if Ketamine and Ketamine.IsLoaded then
+		Ketamine:Notify({
+			Title = "!",
+			Description = "FAILED TO LOAD: Already loaded.",
 		})
 		return
 	end
 
-	getgenv().Ketamine = {
-		Loaded = true,
-		StealthMode = LaunchOptions and LaunchOptions.StealthMode or false,
-		Interface = {
-			Library = Import("Packages/Library.luau"),
-			SaveManager = Import("Packages/SaveManager.luau"),
-			ThemeManager = Import("Packages/ThemeManager.luau"),
-		},
-		Modules = {
-			Cheat = Import("Modules/Cheat.luau"),
-			Entity = Import("Modules/Entity.luau"),
-			Utility = Import("Modules/Utility.luau"),
-		},
+	Ketamine.Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/"
+	Ketamine.IsLoaded = true
+	Ketamine.StreamMode = Options.StreamMode
+	Ketamine.Library = Ketamine:Import("packages/Library.luau")
+	Ketamine.LibraryAddons = {
+		Save = Ketamine:Import("packages/SaveManager.luau"),
+		Theme = Ketamine:Import("packages/ThemeManager.luau"),
 	}
 
-	local Source = Import("Source.luau")
+	-- Top Level API
+	getgenv().Entity = Ketamine:Import("modules/Components/Entity.luau")
+	getgenv().Utility = Ketamine:Import("modules/Components/Utility.luau")
+	getgenv().Draw = Ketamine:Import("modules/Components/Draw.luau")
+	getgenv().Cheat = Ketamine:Import("modules/Components/Cheat.luau")
 
-	task.delay(1, function()
-		Source:OnUnload(function()
-			Ketamine.Interface.Library:Unload()
-			Ketamine.Loaded = false
+	-- Private Level Cheat Functions
+	local Aimbot = Ketamine:Import("modules/Private/Aimbot.luau")
+	local Visuals = Ketamine:Import("modules/Private/Visuals.luau")
+	local Settings = Ketamine:Import("modules/Private/Settings.luau")
+
+	local GameSupport = Ketamine:Import(`modules/Support/{game.GameId}`)
+	if GameSupport then
+		Ketamine.Support = GameSupport
+	end
+
+	-- Window Creation
+	Ketamine.Window = Ketamine.Library:CreateWindow({
+		Title = "ketamine.tranq",
+		Center = true,
+		AutoShow = not Ketamine.StreamMode,
+		UnlockMouseWhileOpen = true,
+	})
+
+	-- Start Dependencies
+	Ketamine:SecureSpawn(Entity.Load, Entity)
+	Ketamine:SecureSpawn(Utility.Load, Utility)
+	Ketamine:SecureSpawn(Draw.Load, Draw)
+	Ketamine:SecureSpawn(Cheat.Load, Cheat)
+
+	-- Start Features
+	Ketamine:SecureSpawn(Aimbot.Load, Aimbot)
+	Ketamine:SecureSpawn(Visuals.Load, Visuals)
+	Ketamine:SecureSpawn(Settings.Load, Settings)
+
+	Cheat:OnUnload(function()
+		Ketamine:Notify({
+			Title = "!",
+			Description = "Unloading Cheat",
+		})
+
+		-- Unload Dependencies
+		Ketamine:SecureSpawn(Entity.Unload, Entity)
+		Ketamine:SecureSpawn(Utility.Unload, Utility)
+		Ketamine:SecureSpawn(Draw.Unload, Draw)
+		Ketamine:SecureSpawn(Cheat.Unload, Cheat)
+
+		-- Unload Features
+		Ketamine:SecureSpawn(Aimbot.Unload, Aimbot)
+		Ketamine:SecureSpawn(Visuals.Unload, Visuals)
+		Ketamine:SecureSpawn(Settings.Unload, Settings)
+		Ketamine.Library:Unload()
+
+		task.delay(1, function()
 			getgenv().Ketamine = nil
 		end)
-		Source:Load()
+	end)
+
+	Ketamine.Library:OnUnload(function()
+		Ketamine.Library.Unloaded = true
 	end)
 end

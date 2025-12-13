@@ -6,16 +6,6 @@ declare function gethui(): Instance
 declare syn: {
     protect_gui: (gui: ScreenGui) -> nil
 }
-declare Ketamine: {
-    Loaded: boolean,
-    StealthMode: boolean,
-    Interface: {
-
-    },
-    Modules: {
-
-    },
-}
 declare function setclipboard(text: string): ()
 declare function clonefunction(func: (...any) -> ...any): (...any) -> ...any
 declare function clonefunc(func: (...any) -> ...any): (...any) -> ...any
