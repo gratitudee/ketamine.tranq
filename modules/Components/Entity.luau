@@ -242,10 +242,18 @@ function Component:GetPlayers(EnemiesOnly: boolean)
 end
 
 -- Event Callbacks Adders
-function Component:OnEntityRemoved(IDX, Function) end
-function Component:OnEntityAdded(IDX, Function) end
-function Component:OnEntityHit(IDX, Function) end
-function Component:OnEntityKilled(IDX, Function) end
+function Component:OnEntityRemoved(Function)
+	table.insert(Component.EventCallbacks.Removed, Function)
+end
+function Component:OnEntityAdded(Function)
+	table.insert(Component.EventCallbacks.Removed, Function)
+end
+function Component:OnEntityHit(Function)
+	table.insert(Component.EventCallbacks.Removed, Function)
+end
+function Component:OnEntityKilled(Function)
+	table.insert(Component.EventCallbacks.Removed, Function)
+end
 
 --[[
 	@param Key string        A unique key to identify the model
