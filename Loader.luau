@@ -3,6 +3,12 @@ if not Ketamine then
 	getgenv().Ketamine = {}
 end
 
+function Ketamine:Print(...)
+	if Ketamine and not Ketamine.StreamMode then
+		print(...)
+	end
+end
+
 function Ketamine:Notify(...)
 	if Ketamine and Ketamine.Library and not Ketamine.StreamMode then
 		Ketamine.Library:Notify(...)
@@ -11,7 +17,7 @@ end
 
 function Ketamine:SecureCall(Function, ...)
 	if typeof(Function) ~= "function" then
-		print(`[K.T]: Function expected got {typeof(Function)}`)
+		Ketamine:Print(`[K.T]: Function expected got {typeof(Function)}`)
 		return
 	end
 
@@ -25,7 +31,7 @@ function Ketamine:SecureCall(Function, ...)
 			})
 		end
 
-		print(`[K.T]: Exception Caught: {Result}, Traceback: {Traceback}`)
+		Ketamine:Print(`[K.T]: Exception Caught: {Result}, Traceback: {Traceback}`)
 	end
 
 	return Success, Result
@@ -75,6 +81,7 @@ return function(Options: {
 		getgenv().Entity = Ketamine:Import("modules/Components/Entity.luau")
 		getgenv().Draw = Ketamine:Import("modules/Components/Draw.luau")
 		getgenv().Cheat = Ketamine:Import("modules/Components/Cheat.luau")
+		getgenv().Flags = Ketamine:Import("modules/Flags.luau")
 
 		-- Private Level Cheat Functions
 		local Aimbot = Ketamine:Import("modules/Private/Aimbot.luau")
@@ -90,6 +97,7 @@ return function(Options: {
 			Ketamine.Library,
 			Ketamine.LibraryAddons.Save,
 			Ketamine.LibraryAddons.Theme,
+			Flags,
 			Entity,
 			Draw,
 			Cheat,
@@ -100,7 +108,7 @@ return function(Options: {
 
 		for _, v in ipairs(Required) do
 			if not v then
-				print(`ABORTED LOADING, MISSING DEPENDENCIES`)
+				Ketamine:Print(`ABORTED LOADING, MISSING DEPENDENCIES`)
 				getgenv().Ketamine = nil
 				return
 			end

@@ -1,7 +1,19 @@
+local Workspace: Workspace = game:GetService("Workspace")
+local Camera = Workspace:FindFirstChildOfClass("Camera")
+
 local Component = {
 	UnloadCallbacks = {},
 	Connections = {},
 }
+
+--[[
+	World to screen 
+	returns screenpos, onscreen
+]]
+function Component:WorldToScreen(WorldPosition: Vector3)
+	local ScreenPos, OnScreen = Camera:WorldToViewportPoint(WorldPosition)
+	return ScreenPos, OnScreen
+end
 
 --[[ 
     adds a connection to the cheat, allowing for later cleanup if the cheat is unloaded.
