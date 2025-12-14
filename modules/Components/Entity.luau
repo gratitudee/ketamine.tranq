@@ -84,12 +84,7 @@ local function GetBoundingBox(Entity)
 end
 
 local function GetVisibility(Entity)
-	local Now = tick()
-	if (Entity.LastVisibilityUpdate - Now) < 0.1 then
-		return nil
-	end
-
-	return -- ...
+	return true
 end
 
 local function GetWeapon(Entity)
