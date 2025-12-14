@@ -1,219 +1,400 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local Component = {
-	EventCallbacks = {
+local Entity = {
+	Entities = {},
+	Callbacks = {
 		Added = {},
 		Removed = {},
 		Hit = {},
 		Killed = {},
 	},
-	Entities = {},
-	Connections = {},
+	PlayerConnections = {},
+	GlobalConnections = {},
 }
 
-local CubeCorners = {
+-- Constants
+local PART_CORNERS = {
 	Vector3.new(0, -1, -1),
 	Vector3.new(0, -1, 1),
 	Vector3.new(0, 1, -1),
 	Vector3.new(0, 1, 1),
 }
 
--- Private Functions
--- Event Callback Fire(r)
-local function FireEntityEvent(Event: "Added" | "Removed" | "Hit" | "Killed", Entity)
-	local EventCallbacks = Component.EventCallbacks[Event]
-	if not EventCallbacks then
-		return
-	end
-
-	for _, Callback in pairs(EventCallbacks) do
-		Callback(Event, Entity)
+-- helper funcs
+local function FireCallback(Event, EntityObject, ...)
+	for _, Callback in pairs(Entity.Callbacks[Event]) do
+		task.spawn(Callback, EntityObject, ...)
 	end
 end
 
--- Get Team Function
-local function GetBoundingBox(Entity)
-	local minX, minY = math.huge, math.huge
-	local maxX, maxY = -math.huge, -math.huge
-	local visible = false
+local function GetBoundingBox(EntityObject)
+	local MinX, MinY = math.huge, math.huge
+	local MaxX, MaxY = -math.huge, -math.huge
+	local Visible = false
 
-	local Bones = Entity.Bones
-	for i = 1, #Bones do
-		local part = Bones[i]
-		if part:IsA("BasePart") then
-			local cf = part.CFrame
-			local hs = part.Size * 0.5
+	for _, Part in ipairs(EntityObject.Bones) do
+		if not Part.Parent then
+			continue
+		end
 
-			for j = 1, 4 do
-				local world = cf:PointToWorldSpace(hs * CubeCorners[j])
-				local screen, onScreen = Cheat:WorldToScreen(world)
+		local CF = Part.CFrame
+		local HS = Part.Size * 0.5
 
-				if onScreen then
-					visible = true
-					local x, y = screen.X, screen.Y
-					if x < minX then
-						minX = x
-					end
-					if y < minY then
-						minY = y
-					end
-					if x > maxX then
-						maxX = x
-					end
-					if y > maxY then
-						maxY = y
-					end
-				end
+		for _, Corner in ipairs(PART_CORNERS) do
+			local World = CF:PointToWorldSpace(HS * Corner)
+			local Screen, OnScreen = Cheat:WorldToScreen(World)
+
+			if OnScreen then
+				Visible = true
+				MinX = math.min(MinX, Screen.X)
+				MinY = math.min(MinY, Screen.Y)
+				MaxX = math.max(MaxX, Screen.X)
+				MaxY = math.max(MaxY, Screen.Y)
 			end
 		end
 	end
 
-	if not visible then
+	if not Visible then
 		return nil
 	end
 
-	local Width = maxX - minX
-	local Height = maxY - minY
+	local Width = MaxX - MinX
+	local Height = MaxY - MinY
 	local PadX = Width * 0.23
 	local PadY = Height * 0.17
 
 	return {
-		X = minX - PadX,
-		Y = minY - PadY,
-		W = Width + PadX * 2,
-		H = Height + PadY * 2,
+		x = MinX - PadX,
+		y = MinY - PadY,
+		w = Width + PadX * 2,
+		h = Height + PadY * 2,
 	}
 end
 
-local function GetVisibility(Entity)
-	return true
-end
-
-local function GetWeapon(Entity)
-	if Ketamine.Support and Ketamine.Support.GetWeapon then
-		return Ketamine.Support:GetWeapon(Entity)
+local function GetTeam(EntityObject)
+	if Ketamine.Support and Ketamine.Support.GetTeam then
+		return Ketamine.Support:GetTeam(EntityObject)
 	end
 
-	local Tool = Entity.Character and Entity.Character:FindFirstChildOfClass("Tool")
-	return Tool and Tool.Name or nil
-end
-
-local function GetTeamColor(Entity)
-	if Entity.Player and Entity.Player.TeamColor then
-		return Entity.Player.TeamColor.Color
+	if EntityObject.Player and EntityObject.Player.Team then
+		return EntityObject.Player.Team.Name
 	end
 
+	return EntityObject.Team or "Neutral"
+end
+
+local function GetTeamColor(EntityObject)
+	if EntityObject.Player and EntityObject.Player.TeamColor then
+		return EntityObject.Player.TeamColor.Color
+	end
 	return Color3.fromRGB(255, 255, 255)
 end
 
-local function GetTeam(Entity)
-	if Ketamine.Support and Ketamine.Support.GetTeam then
-		return Ketamine.Support:GetTeam(Entity)
+local function GetWeapon(EntityObject)
+	if Ketamine.Support and Ketamine.Support.GetWeapon then
+		return Ketamine.Support:GetWeapon(EntityObject)
 	end
 
-	if Entity.Player and Entity.Player.Team then
-		return Entity.Player.Team.Name
-	end
-
-	return Entity.Team or "Neutral" -- ffa mode if cant find team
+	local Tool = EntityObject.Character and EntityObject.Character:FindFirstChildOfClass("Tool")
+	return Tool and Tool.Name or nil
 end
 
-local function GetAlive(Entity)
+local function GetHealth(EntityObject)
 	if Ketamine.Support and Ketamine.Support.GetHealth then
-		return Ketamine.Support:GetHealth(Entity)
+		return Ketamine.Support:GetHealth(EntityObject)
 	end
 
-	if Entity.Humanoid then
-		return Entity.Humanoid.Health > 0
+	if EntityObject.Humanoid then
+		return EntityObject.Humanoid.Health, EntityObject.Humanoid.MaxHealth
 	end
 
-	if Entity.HealthInstance then
-		local Value = Entity.HealthInstance.Value
-		return (type(Value) == "number" and Value > 0) or Value == true
+	if EntityObject.HealthInstance then
+		local Value = EntityObject.HealthInstance.Value
+		if type(Value) == "number" then
+			return Value, EntityObject.MaxHealthValue or 100
+		end
 	end
 
-	return true -- default to be alive so it still fuckin works.
+	return EntityObject.StaticHealth or 100, EntityObject.MaxHealthValue or 100
 end
 
-local function GetHealth(Entity)
-	if Ketamine.Support and Ketamine.Support.GetHealth then
-		return Ketamine.Support:GetHealth(Entity)
-	end
+-- entity methods
+local EntityMethods = {}
+EntityMethods.__index = EntityMethods
 
-	if Entity.Humanoid then
-		return Entity.Humanoid.Health
-	end
-
-	if Entity.HealthInstance then
-		local Value = Entity.HealthInstance.Value
-		return (type(Value) == "number" and Value > 0) or 100
-	end
-
-	return 100
+function EntityMethods:GetBonePosition(BoneName)
+	local Bone = self:GetBoneInstance(BoneName)
+	return Bone and Bone.Position or nil
 end
 
-local function UpdateEntity(Entity)
-	if
-		not Entity.Character
-		or not Entity.Character.Parent
-		or not Entity.PrimaryPart
-		or not Entity.PrimaryPart.Parent
-	then
-		Component:RemoveModel(Entity._Key)
+function EntityMethods:GetBoneInstance(BoneName)
+	return self.Character and self.Character:FindFirstChild(BoneName)
+end
+
+function EntityMethods:GetBoneSize(BoneName)
+	local Bone = self:GetBoneInstance(BoneName)
+	return Bone and Bone.Size or nil
+end
+
+function EntityMethods:GetBoneRotation(BoneName)
+	local Bone = self:GetBoneInstance(BoneName)
+	if not Bone then
+		return nil
+	end
+
+	local CF = Bone.CFrame
+	return {
+		CF.RightVector.X,
+		CF.RightVector.Y,
+		CF.RightVector.Z,
+		CF.UpVector.X,
+		CF.UpVector.Y,
+		CF.UpVector.Z,
+		-CF.LookVector.X,
+		-CF.LookVector.Y,
+		-CF.LookVector.Z,
+	}
+end
+
+function EntityMethods:Update()
+	if not self.Character or not self.Character.Parent or not self.PrimaryPart or not self.PrimaryPart.Parent then
+		Entity:RemoveModel(self.Key)
 		return
 	end
 
-	Entity.Position = Entity.PrimaryPart and Entity.PrimaryPart.Position or Vector3.zero
-	Entity.Velocity = Entity.PrimaryPart and Entity.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
-	Entity.LastHealth = Entity.Health
-	Entity.Health = GetHealth(Entity)
-	Entity.Weapon = GetWeapon(Entity)
-	--
-	Entity.Team = GetTeam(Entity)
-	Entity.TeamColor = GetTeamColor(Entity)
-	--
-	Entity.IsAlive = GetAlive(Entity)
+	self.Position = self.PrimaryPart.Position
+	self.Velocity = self.PrimaryPart.AssemblyLinearVelocity
 
-	Entity.IsEnemy = Flags.Settings.FreeForAll == true
-		or Entity.Team == "Neutral"
-		or Entity.Team ~= Component:GetLocalPlayer().Team
-	local NewVisibilityState = GetVisibility(Entity)
-	if NewVisibilityState ~= nil then
-		Entity.IsVisible = NewVisibilityState
+	local OldHealth = self.Health
+	self.Health, self.MaxHealth = GetHealth(self)
+
+	if OldHealth and self.Health < OldHealth then
+		local Damage = OldHealth - self.Health
+
+		if self.Health <= 0 then
+			FireCallback("Killed", self)
+		elseif self.IsAimbotTarget then
+			FireCallback("Hit", self, Damage)
+			self.IsAimbotTarget = false
+		end
 	end
-	--
-	Entity.BoundingBox = GetBoundingBox(Entity)
+
+	self.Weapon = GetWeapon(self)
+
+	self.Team = GetTeam(self)
+	self.TeamColor = GetTeamColor(self)
+	self.IsAlive = self.Health > 0
+
+	local LocalPlayer = Entity:GetLocalPlayer()
+	self.IsEnemy = Flags.Settings.FreeForAll == true
+		or self.Team == "Neutral"
+		or (LocalPlayer and self.Team ~= LocalPlayer.Team)
+
+	-- self.IsVisible = CheckVisibility(self)
+	self.BoundingBox = GetBoundingBox(self)
 end
 
-local function SetupPlayer(Player: Player)
-	local function OnCharacterAdded(Character: Model)
+function EntityMethods:Destroy()
+	for _, Connection in ipairs(self.Connections) do
+		Connection:Disconnect()
+	end
+	table.clear(self.Connections)
+	table.clear(self.Bones)
+end
+
+-- entity management
+function Entity:AddModel(Key, Data)
+	if not Key or type(Data) ~= "table" then
+		return false
+	end
+	if not Data.Character or not Data.PrimaryPart or not Data.Name then
+		return false
+	end
+
+	if self.Entities[Key] then
+		self:RemoveModel(Key)
+	end
+
+	local EntityObject = setmetatable({
+		Key = Key,
+		Character = Data.Character,
+		PrimaryPart = Data.PrimaryPart,
+		Player = Data.Player,
+		Humanoid = Data.Humanoid,
+		HealthInstance = Data.HealthInstance,
+		StaticHealth = Data.Health,
+		MaxHealthValue = Data.MaxHealth,
+		IsAimbotTarget = false,
+		Bones = {},
+		Connections = {},
+
+		Name = Data.Name,
+		DisplayName = Data.DisplayName or Data.Name,
+		UserId = Data.Player and Data.Player.UserId or nil,
+		Position = Vector3.zero,
+		Velocity = Vector3.zero,
+		Health = Data.Health or 100,
+		MaxHealth = Data.MaxHealth or 100,
+		Team = Data.Team,
+		TeamColor = Data.TeamColor,
+		Weapon = Data.Weapon,
+		IsAlive = true,
+		IsEnemy = false,
+		IsVisible = false,
+		IsWhitelisted = false,
+		BoundingBox = nil,
+	}, EntityMethods)
+
+	for _, Child in ipairs(EntityObject.Character:GetChildren()) do
+		if Child:IsA("BasePart") then
+			table.insert(EntityObject.Bones, Child)
+		end
+	end
+
+	table.insert(
+		EntityObject.Connections,
+		EntityObject.Character.ChildAdded:Connect(function(Child)
+			if Child:IsA("BasePart") then
+				table.insert(EntityObject.Bones, Child)
+			end
+		end)
+	)
+
+	table.insert(
+		EntityObject.Connections,
+		EntityObject.Character.ChildRemoved:Connect(function(Child)
+			if Child:IsA("BasePart") then
+				local Index = table.find(EntityObject.Bones, Child)
+				if Index then
+					table.remove(EntityObject.Bones, Index)
+				end
+			end
+		end)
+	)
+
+	table.insert(
+		EntityObject.Connections,
+		EntityObject.Character.AncestryChanged:Connect(function(_, Parent)
+			if not Parent then
+				self:RemoveModel(Key)
+			end
+		end)
+	)
+
+	self.Entities[Key] = EntityObject
+	FireCallback("Added", EntityObject)
+
+	return true
+end
+
+function Entity:RemoveModel(Key)
+	local EntityObject = self.Entities[Key]
+	if not EntityObject then
+		return false
+	end
+
+	FireCallback("Removed", EntityObject)
+	EntityObject:Destroy()
+	self.Entities[Key] = nil
+
+	return true
+end
+
+function Entity:ClearModels()
+	for Key in pairs(self.Entities) do
+		if not self.Entities[Key].Player then
+			self:RemoveModel(Key)
+		end
+	end
+	return true
+end
+
+function Entity:EditModel(Key, Data)
+	local EntityObject = self.Entities[Key]
+	if not EntityObject then
+		return false
+	end
+
+	if Data.Health then
+		EntityObject.StaticHealth = Data.Health
+	end
+	if Data.MaxHealth then
+		EntityObject.MaxHealthValue = Data.MaxHealth
+	end
+	if Data.Team then
+		EntityObject.Team = Data.Team
+	end
+	if Data.TeamColor then
+		EntityObject.TeamColor = Data.TeamColor
+	end
+	if Data.Weapon then
+		EntityObject.Weapon = Data.Weapon
+	end
+
+	return true
+end
+
+-- query funcs
+function Entity:GetLocalPlayer()
+	return self.Entities[Players.LocalPlayer.Name]
+end
+
+function Entity:GetPlayers(OnlyEnemies)
+	local Result = {}
+	for _, EntityObject in pairs(self.Entities) do
+		if not OnlyEnemies or EntityObject.IsEnemy then
+			table.insert(Result, EntityObject)
+		end
+	end
+	return Result
+end
+
+-- callbacks
+function Entity:OnEntityAdded(Callback)
+	table.insert(self.Callbacks.Added, Callback)
+end
+
+function Entity:OnEntityRemoved(Callback)
+	table.insert(self.Callbacks.Removed, Callback)
+end
+
+function Entity:OnEntityHit(Callback)
+	table.insert(self.Callbacks.Hit, Callback)
+end
+
+function Entity:OnEntityKilled(Callback)
+	table.insert(self.Callbacks.Killed, Callback)
+end
+
+-- player setup
+local function SetupPlayer(Player)
+	local function OnCharacterAdded(Character)
 		local PrimaryPart = Character.PrimaryPart
 			or Character:WaitForChild("HumanoidRootPart", 3)
 			or Character:FindFirstChild("Head")
+
 		local Humanoid = Character:FindFirstChildOfClass("Humanoid")
 
 		if not PrimaryPart then
 			return
 		end
 
-		Component:AddModel(Player.Name, {
+		Entity:AddModel(Player.Name, {
 			Name = Player.Name,
+			DisplayName = Player.DisplayName,
 			Character = Character,
 			PrimaryPart = PrimaryPart,
-
 			Player = Player,
-			DisplayName = Player.DisplayName,
 			Humanoid = Humanoid,
-			HealthInstance = nil,
 		})
 	end
 
 	local function OnCharacterRemoving()
-		Component:RemoveModel(Player.Name)
+		Entity:RemoveModel(Player.Name)
 	end
 
-	Component.Connections[Player] = {
+	Entity.PlayerConnections[Player] = {
 		Player.CharacterAdded:Connect(OnCharacterAdded),
 		Player.CharacterRemoving:Connect(OnCharacterRemoving),
 	}
@@ -223,211 +404,68 @@ local function SetupPlayer(Player: Player)
 	end
 end
 
--- Public Functions
--- Get Functions
-function Component:GetLocalPlayer()
-	return self.Entities[Players.LocalPlayer.Name]
-end
-
-function Component:GetPlayers(EnemiesOnly: boolean)
-	local ToReturn = {}
-	for _, Entity in pairs(Component.Entities) do
-		if EnemiesOnly and not Entity.IsEnemy then
-			continue
-		end
-
-		table.insert(ToReturn, Entity)
-	end
-	return ToReturn
-end
-
--- Event Callbacks Adders
-function Component:OnEntityRemoved(Function)
-	table.insert(Component.EventCallbacks.Removed, Function)
-end
-function Component:OnEntityAdded(Function)
-	table.insert(Component.EventCallbacks.Removed, Function)
-end
-function Component:OnEntityHit(Function)
-	table.insert(Component.EventCallbacks.Removed, Function)
-end
-function Component:OnEntityKilled(Function)
-	table.insert(Component.EventCallbacks.Removed, Function)
-end
-
---[[
-	@param Key string        A unique key to identify the model
-	@param Data table        A table containing model information with the following structure:
-		{
-			Name: string,                   -- Name of the entity
-			Character: Model,               -- The model representing the entity
-			PrimaryPart: BasePart,          -- The primary part of the model
-
-			-- Optional fields
-			Player: Player?,                -- Associated player (if applicable)
-			DisplayName: string?,           -- Display name for the entity
-			Humanoid: Humanoid?,            -- Humanoid instance (if applicable)
-			HealthInstance: Instance?       -- Health value instance
-		}
-	@return Success boolean 	If AddModel successfully added the model or not.
-]]
-function Component:AddModel(Key, Data)
-	if not Key or not Data or typeof(Data) ~= "table" then
-		return false
-	end
-
-	if not Data.Character then
-		return false
-	end
-
-	if not Data.Name then
-		return false
-	end
-
-	if not Data.PrimaryPart then
-		return false
-	end
-
-	if not Data.Name and Data.Player then
-		Data.Name = Data.Player.Name
-	end
-
-	if self.Entities[Key] then
-		self:RemoveModel(Key)
-	end
-
-	local Entity = {
-		_Key = Key,
-		Player = Data.Player,
-		Character = Data.Character,
-		PrimaryPart = Data.PrimaryPart,
-		Name = Data.Name,
-		DisplayName = Data.DisplayName or Data.Name,
-		Humanoid = Data.Humanoid,
-		HealthInstance = Data.HealthInstance,
-		Health = 100,
-		LastHealth = nil,
-		Weapon = nil,
-		--
-		Team = Data.Team or nil,
-		TeamColor = Data.TeamColor or nil,
-		--
-		Position = Vector3.zero,
-		Velocity = Vector3.zero,
-		--
-		IsAlive = true,
-		IsEnemy = false,
-		IsVisible = false,
-		IsWhitelisted = false,
-		--
-		BoundingBox = nil,
-		Bones = {},
-		--
-		Connections = {},
-	}
-
-	for _, Basepart: BasePart? in pairs(Entity.Character:GetChildren()) do
-		if Basepart and Basepart:IsA("BasePart") then
-			table.insert(Entity.Bones, Basepart)
-		end
-	end
-
-	Entity.Connections[#Entity.Connections + 1] = Entity.Character.ChildAdded:Connect(function(a0: Instance)
-		if a0 and a0:IsA("BasePart") then
-			table.insert(Entity.Bones, a0)
-		end
-	end)
-
-	Entity.Connections[#Entity.Connections + 1] = Entity.Character.ChildRemoved:Connect(function(a0: Instance)
-		if a0 and a0:IsA("BasePart") then
-			table.remove(Entity.Bones, table.find(Entity.Bones, a0))
-		end
-	end)
-
-	Entity.Connections[#Entity.Connections + 1] = Entity.Character.AncestryChanged:Connect(function(_, parent)
-		if not parent then
-			self:RemoveModel(Entity._Key)
-		end
-	end)
-
-	self.Entities[Key] = Entity
-	FireEntityEvent("Added", self.Entities[Key])
-	return true
-end
-
-function Component:RemoveModel(Key)
-	local Entity = self.Entities[Key]
-	if not Entity then
-		return
-	end
-
-	FireEntityEvent("Removed", Entity)
-	for _, Connection in pairs(Entity.Connections) do
-		if typeof(Connection) == "RBXScriptConnection" and Connection.Connected then
-			Connection:Disconnect()
-		end
-	end
-	table.clear(Entity.Connections)
-	self.Entities[Key] = nil
-end
-
--- Runtime Functions
-function Component:Load()
-	local function ProcessEntityPath(Path)
-		if typeof(Path) == "table" then
-		elseif typeof(Path) == "Instance" then
-		end
-	end
-
+-- runtime
+function Entity:Load()
+	--[[
 	if Ketamine.Support and Ketamine.Support.GetEntities then
-		local EntityResult = Ketamine.Support:GetEntities()
-		ProcessEntityPath(EntityResult)
-	end
-
-	for _, Player in pairs(Players:GetPlayers()) do
-		SetupPlayer(Player)
-	end
-
-	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
-		SetupPlayer(Player)
-	end)
-
-	Cheat:Connect(Players.PlayerRemoving, function(Player: Player)
-		self:RemoveModel(Player.Name)
-
-		if Component.Connections[Player] then
-			for _, conn in pairs(Component.Connections[Player]) do
-				conn:Disconnect()
+		local Entities = Ketamine.Support:GetEntities()
+		if type(Entities) == "table" then
+			for Key, Data in pairs(Entities) do
+				self:AddModel(Key, Data)
 			end
-			Component.Connections[Player] = nil
 		end
-	end)
+	end]]
+	--
 
-	Cheat:Connect(RunService.Heartbeat, function()
-		for _, Entity in pairs(self.Entities) do
-			UpdateEntity(Entity)
-		end
-	end)
+	for _, Player in ipairs(Players:GetPlayers()) do
+		SetupPlayer(Player)
+	end
+
+	table.insert(self.GlobalConnections, Players.PlayerAdded:Connect(SetupPlayer))
+	table.insert(
+		self.GlobalConnections,
+		Players.PlayerRemoving:Connect(function(Player)
+			self:RemoveModel(Player.Name)
+
+			if self.PlayerConnections[Player] then
+				for _, Conn in ipairs(self.PlayerConnections[Player]) do
+					Conn:Disconnect()
+				end
+				self.PlayerConnections[Player] = nil
+			end
+		end)
+	)
+
+	table.insert(
+		self.GlobalConnections,
+		RunService.Heartbeat:Connect(function()
+			for _, EntityObject in pairs(self.Entities) do
+				EntityObject:Update()
+			end
+		end)
+	)
 end
 
-function Component:Unload()
-	for Player, conns in pairs(self.Connections) do
-		for _, conn in pairs(conns) do
-			if typeof(conn) == "RBXScriptConnection" and conn.Connected then
-				conn:Disconnect()
-			end
+function Entity:Unload()
+	for _, Connection in ipairs(self.GlobalConnections) do
+		Connection:Disconnect()
+	end
+	table.clear(self.GlobalConnections)
+
+	for Player, Connections in pairs(self.PlayerConnections) do
+		for _, Conn in ipairs(Connections) do
+			Conn:Disconnect()
 		end
 	end
-	table.clear(self.Connections)
+	table.clear(self.PlayerConnections)
 
 	for Key in pairs(self.Entities) do
 		self:RemoveModel(Key)
 	end
 
-	-- Clear callbacks last
-	for _, tbl in pairs(self.EventCallbacks) do
-		table.clear(tbl)
+	for _, Tbl in pairs(self.Callbacks) do
+		table.clear(Tbl)
 	end
 end
 
-return Component
+return Entity
