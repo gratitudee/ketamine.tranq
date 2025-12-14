@@ -266,6 +266,24 @@ function Component:AddModel(Key, Data)
 		Connections = {},
 	}
 
+	for _, Basepart: BasePart? in pairs(Entity.Character:GetChildren()) do
+		if Basepart and Basepart:IsA("BasePart") then
+			table.insert(Entity.Bones, Basepart)
+		end
+	end
+
+	Entity.Connections[#Entity.Connections + 1] = Entity.Character.ChildAdded:Connect(function(a0: Instance)
+		if a0 and a0:IsA("BasePart") then
+			table.insert(Entity.Bones, a0)
+		end
+	end)
+
+	Entity.Connections[#Entity.Connections + 1] = Entity.Character.ChildRemoved:Connect(function(a0: Instance)
+		if a0 and a0:IsA("BasePart") then
+			table.remove(Entity.Bones, table.find(Entity.Bones, a0))
+		end
+	end)
+
 	self.Entities[Key] = Entity
 	FireEntityEvent("Added", self.Entities[Key])
 	return true
