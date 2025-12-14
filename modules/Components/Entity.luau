@@ -313,7 +313,7 @@ function Component:Load()
 			local Character = Player.Character
 			local PrimaryPart, Humanoid =
 				Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-				Character and Character:FindFirstChild("HumanoidRootPart") or nil
+				Character and Character:FindFirstChild("Humanoid") or nil
 			self:AddModel(Player.Name, {
 				Name = Player.Name,
 				Character = Player.Character,
@@ -331,7 +331,7 @@ function Component:Load()
 		local Character = Player.Character
 		local PrimaryPart, Humanoid =
 			Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Character and Character:FindFirstChild("HumanoidRootPart") or nil
+			Character and Character:FindFirstChild("Humanoid") or nil
 
 		Ketamine:SecureSpawn(function()
 			self:AddModel(Player.Name, {

@@ -51,8 +51,7 @@ function Ketamine:Import(Path)
 	end
 
 	local Function = loadstring(Response.Body)
-
-	return typeof(Function) == "function" and Ketamine:SecureCall(Function) or nil
+	return typeof(Function) == "function" and Function()
 end
 
 return function(Options: {
