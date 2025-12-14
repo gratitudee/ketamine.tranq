@@ -385,46 +385,22 @@ function Component:Load()
 	end
 
 	for _, Player in pairs(Players:GetPlayers()) do
-		Ketamine:SecureSpawn(function()
-			local Character = Player.Character
-			local PrimaryPart, Humanoid =
-				Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-				Character and Character:FindFirstChild("Humanoid") or nil
-			self:AddModel(Player.Name, {
-				Name = Player.Name,
-				Character = Player.Character,
-				PrimaryPart = PrimaryPart,
-
-				Player = Player,
-				DisplayName = Player.DisplayName,
-				Humanoid = Humanoid,
-				HealthInstance = nil,
-			})
-		end)
+		SetupPlayer(Player)
 	end
 
 	Cheat:Connect(Players.PlayerAdded, function(Player: Player)
-		local Character = Player.Character
-		local PrimaryPart, Humanoid =
-			Character and (Character.PrimaryPart or Character:FindFirstChild("Head")) or nil,
-			Character and Character:FindFirstChild("Humanoid") or nil
-
-		Ketamine:SecureSpawn(function()
-			self:AddModel(Player.Name, {
-				Name = Player.Name,
-				Character = Player.Character,
-				PrimaryPart = PrimaryPart,
-
-				Player = Player,
-				DisplayName = Player.DisplayName,
-				Humanoid = Humanoid,
-				HealthInstance = nil,
-			})
-		end)
+		SetupPlayer(Player)
 	end)
 
 	Cheat:Connect(Players.PlayerRemoving, function(Player: Player)
 		self:RemoveModel(Player.Name)
+
+		if Component.Connections[Player] then
+			for _, conn in pairs(Component.Connections[Player]) do
+				conn:Disconnect()
+			end
+			Component.Connections[Player] = nil
+		end
 	end)
 
 	Cheat:Connect(RunService.Heartbeat, function()
@@ -435,9 +411,22 @@ function Component:Load()
 end
 
 function Component:Unload()
-	table.clear(self.EventCallbacks)
-	for Key, Entity in pairs(self.Entities) do
+	for Player, conns in pairs(self.Connections) do
+		for _, conn in pairs(conns) do
+			if typeof(conn) == "RBXScriptConnection" and conn.Connected then
+				conn:Disconnect()
+			end
+		end
+	end
+	table.clear(self.Connections)
+
+	for Key in pairs(self.Entities) do
 		self:RemoveModel(Key)
+	end
+
+	-- Clear callbacks last
+	for _, tbl in pairs(self.EventCallbacks) do
+		table.clear(tbl)
 	end
 end
 
