@@ -9,6 +9,7 @@ local Component = {
 		Killed = {},
 	},
 	Entities = {},
+	Connections = {},
 }
 
 local CubeCorners = {
@@ -153,6 +154,16 @@ local function GetHealth(Entity)
 end
 
 local function UpdateEntity(Entity)
+	if
+		not Entity.Character
+		or not Entity.Character.Parent
+		or not Entity.PrimaryPart
+		or not Entity.PrimaryPart.Parent
+	then
+		Component:RemoveModel(Entity._Key)
+		return
+	end
+
 	Entity.Position = Entity.PrimaryPart and Entity.PrimaryPart.Position or Vector3.zero
 	Entity.Velocity = Entity.PrimaryPart and Entity.PrimaryPart.AssemblyLinearVelocity or Vector3.zero
 	Entity.LastHealth = Entity.Health
@@ -173,6 +184,43 @@ local function UpdateEntity(Entity)
 	end
 	--
 	Entity.BoundingBox = GetBoundingBox(Entity)
+end
+
+local function SetupPlayer(Player: Player)
+	local function OnCharacterAdded(Character: Model)
+		local PrimaryPart = Character.PrimaryPart
+			or Character:WaitForChild("HumanoidRootPart", 3)
+			or Character:FindFirstChild("Head")
+		local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+		if not PrimaryPart then
+			return
+		end
+
+		Component:AddModel(Player.Name, {
+			Name = Player.Name,
+			Character = Character,
+			PrimaryPart = PrimaryPart,
+
+			Player = Player,
+			DisplayName = Player.DisplayName,
+			Humanoid = Humanoid,
+			HealthInstance = nil,
+		})
+	end
+
+	local function OnCharacterRemoving()
+		Component:RemoveModel(Player.Name)
+	end
+
+	Component.Connections[Player] = {
+		Player.CharacterAdded:Connect(OnCharacterAdded),
+		Player.CharacterRemoving:Connect(OnCharacterRemoving),
+	}
+
+	if Player.Character then
+		OnCharacterAdded(Player.Character)
+	end
 end
 
 -- Public Functions
@@ -241,6 +289,7 @@ function Component:AddModel(Key, Data)
 	end
 
 	local Entity = {
+		_Key = Key,
 		Player = Data.Player,
 		Character = Data.Character,
 		PrimaryPart = Data.PrimaryPart,
@@ -284,6 +333,12 @@ function Component:AddModel(Key, Data)
 	Entity.Connections[#Entity.Connections + 1] = Entity.Character.ChildRemoved:Connect(function(a0: Instance)
 		if a0 and a0:IsA("BasePart") then
 			table.remove(Entity.Bones, table.find(Entity.Bones, a0))
+		end
+	end)
+
+	Entity.Connections[#Entity.Connections + 1] = Entity.Character.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			self:RemoveModel(Entity._Key)
 		end
 	end)
 
