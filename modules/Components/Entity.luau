@@ -72,14 +72,16 @@ local function GetBoundingBox(Entity)
 		return nil
 	end
 
-	local w = maxX - minX
-	local h = maxY - minY
+	local Width = maxX - minX
+	local Height = maxY - minY
+	local PadX = Width * 0.23
+	local PadY = Height * 0.17
 
 	return {
-		X = minX - w * 0.23,
-		Y = minY - h * 0.17,
-		W = w * 1.46,
-		H = h * 1.34,
+		X = minX - PadX,
+		Y = minY - PadY,
+		W = Width + PadX * 2,
+		H = Height + PadY * 2,
 	}
 end
 
