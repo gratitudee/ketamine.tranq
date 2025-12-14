@@ -220,18 +220,16 @@ function Component:AddModel(Key, Data)
 		return false
 	end
 
-	if not Data.Player then
-		if not Data.Character then
-			return false
-		end
+	if not Data.Character then
+		return false
+	end
 
-		if not Data.Name then
-			return false
-		end
+	if not Data.Name then
+		return false
+	end
 
-		if not Data.PrimaryPart then
-			return false
-		end
+	if not Data.PrimaryPart then
+		return false
 	end
 
 	if not Data.Name and Data.Player then
