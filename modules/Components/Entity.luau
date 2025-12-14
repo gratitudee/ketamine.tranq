@@ -163,7 +163,10 @@ local function UpdateEntity(Entity)
 	Entity.TeamColor = GetTeamColor(Entity)
 	--
 	Entity.IsAlive = GetAlive(Entity)
-	Entity.IsEnemy = Flags.Settings.FreeForAll == true or Entity.Team ~= Component:GetLocalPlayer().Team
+
+	Entity.IsEnemy = Flags.Settings.FreeForAll == true
+		or Entity.Team == "Neutral"
+		or Entity.Team ~= Component:GetLocalPlayer().Team
 	local NewVisibilityState = GetVisibility(Entity)
 	if NewVisibilityState ~= nil then
 		Entity.IsVisible = NewVisibilityState
