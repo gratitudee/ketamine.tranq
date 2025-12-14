@@ -1,4 +1,3 @@
-local Entity = require("./.vscode/OldSRC/Modules/Entity")
 if not Ketamine then
 	getgenv().Ketamine = {}
 end
