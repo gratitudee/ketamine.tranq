@@ -167,10 +167,7 @@ local function UpdateEntity(Entity)
 		Entity.IsVisible = NewVisibilityState
 	end
 	--
-	local NewBoundingBox = GetBoundingBox(Entity)
-	if NewBoundingBox ~= nil then
-		Entity.BoundingBox = NewBoundingBox
-	end
+	Entity.BoundingBox = GetBoundingBox(Entity)
 end
 
 -- Public Functions
