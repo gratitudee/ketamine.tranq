@@ -3,8 +3,11 @@ return {
 		Enabled = false,
 		KeybindHeld = false,
 
-		SmoothnessX = 50,
-		SmoothnessY = 50,
+		Smoothness = {
+			Enabled = false,
+			SmoothnessX = 50,
+			SmoothnessY = 50,
+		},
 
 		FieldOfView = {
 			DrawingEnabled = false,

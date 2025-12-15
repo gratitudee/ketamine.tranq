@@ -1,3 +1,4 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -16,6 +17,29 @@ local function BuildMenu()
 		Text = "Aimbot",
 		Default = "MB1",
 	})
+
+	AimbotMain:AddToggle("SmoothnessEnabled", {
+		Text = "Smoothness",
+		Default = Flags.Aimbot.Smoothness.Enabled,
+	})
+
+	local SmoothnessDependency = AimbotMain:AddDependencyBox()
+	SmoothnessDependency:AddSlider("AimSmoothnessX", {
+		Text = "Smoothness (X)",
+		Default = Flags.Aimbot.Smoothness.SmoothnessX,
+		Min = 0,
+		Max = 100,
+		Rounding = 1,
+	})
+	SmoothnessDependency:AddSlider("AimSmoothnessY", {
+		Text = "Smoothness (Y)",
+		Default = Flags.Aimbot.Smoothness.SmoothnessY,
+		Min = 0,
+		Max = 100,
+		Rounding = 1,
+	})
+
+	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
 
 	AimbotMain:AddDivider()
 
@@ -41,8 +65,6 @@ local function BuildMenu()
 		Max = 500,
 		Rounding = 1,
 	})
-
-	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
 		Text = "Draw Deadzone",
