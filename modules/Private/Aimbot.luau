@@ -17,6 +17,8 @@ local function BuildMenu()
 		Default = "MB1",
 	})
 
+	AimbotMain:AddDivider()
+
 	AimbotMain:AddToggle("DrawAimFOV", {
 		Text = "Draw FOV",
 		Default = Flags.Aimbot.DrawFOV,
@@ -28,6 +30,9 @@ local function BuildMenu()
 		Max = 500,
 		Rounding = 1,
 	})
+
+	AimbotMain:AddDivider()
+
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
 		Text = "Draw FOV",
 		Default = Flags.Aimbot.DrawDeadzone,
@@ -65,6 +70,8 @@ local function BuildMenu()
 		Default = Flags.Aimbot.AimChecks,
 		Text = "Aim Checks",
 	})
+
+	AimbotSettings:AddDivider()
 
 	AimbotSettings:AddSlider("AimMaxDistance", {
 		Text = "Max Distance",
