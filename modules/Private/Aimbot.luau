@@ -5,7 +5,6 @@ local function BuildMenu()
 	local Tab = Ketamine.Window:AddTab("Aimbot")
 	local AimbotTabBox = Tab:AddLeftTabbox()
 	local AimbotMain = AimbotTabBox:AddTab("Main")
-	local AimbotSettings = AimbotTabBox:AddTab("Settings")
 
 	-- Aimbot Main
 	AimbotMain:AddToggle("AimEnabled", {
@@ -16,6 +15,36 @@ local function BuildMenu()
 		Text = "Aimbot",
 		Default = "MB1",
 	})
+
+	AimbotMain:AddDivider()
+
+	AimbotMain:AddDropdown("AimMethod", {
+		Values = { "Mouse", "Camera" },
+		Default = Flags.Aimbot.AimMethod,
+		Text = "Aim Method",
+	})
+
+	AimbotMain:AddDropdown("AimStyle", {
+		Values = { "Linear", "Exponential", "Spring" },
+		Default = Flags.Aimbot.AimStyle,
+		Text = "Aim Easing",
+	})
+
+	AimbotMain:AddDropdown("AimPriority", {
+		Values = { "Closest To Crosshair", "Closest To Player", "Lowest HP", "Highest HP" },
+		Default = Flags.Aimbot.AimTargetting,
+		Text = "Aim Priority",
+	})
+
+	AimbotMain:AddDropdown("AimChecks", {
+		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
+		AllowNull = true,
+		Multi = true,
+		Default = Flags.Aimbot.AimChecks,
+		Text = "Aim Checks",
+	})
+
+	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("SmoothnessEnabled", {
 		Text = "Smoothness",
@@ -87,36 +116,10 @@ local function BuildMenu()
 		Max = 500,
 		Rounding = 1,
 	})
-	-- Aimbot Settings
-	AimbotSettings:AddDropdown("AimMethod", {
-		Values = { "Mouse", "Camera" },
-		Default = Flags.Aimbot.AimMethod,
-		Text = "Aim Method",
-	})
 
-	AimbotSettings:AddDropdown("AimStyle", {
-		Values = { "Linear", "Exponential", "Spring" },
-		Default = Flags.Aimbot.AimStyle,
-		Text = "Aim Easing",
-	})
+	AimbotMain:AddDivider()
 
-	AimbotSettings:AddDropdown("AimPriority", {
-		Values = { "Closest To Crosshair", "Closest To Player", "Lowest HP", "Highest HP" },
-		Default = Flags.Aimbot.AimTargetting,
-		Text = "Aim Priority",
-	})
-
-	AimbotSettings:AddDropdown("AimChecks", {
-		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
-		AllowNull = true,
-		Multi = true,
-		Default = Flags.Aimbot.AimChecks,
-		Text = "Aim Checks",
-	})
-
-	AimbotSettings:AddDivider()
-
-	AimbotSettings:AddSlider("AimMaxDistance", {
+	AimbotMain:AddSlider("AimMaxDistance", {
 		Text = "Max Distance",
 		Default = Flags.Aimbot.MaxDistance,
 		Min = 1,
