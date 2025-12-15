@@ -14,6 +14,7 @@ local function BuildMenu()
 	}):AddKeyPicker("AimKeybind", {
 		Mode = "Hold",
 		Text = "Aimbot",
+		Default = "MB1",
 	})
 
 	AimbotMain:AddToggle("DrawAimFOV", {
