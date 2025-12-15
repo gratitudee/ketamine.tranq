@@ -57,6 +57,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 100,
 		Rounding = 1,
+		Compact = true,
 	})
 	SmoothnessDependency:AddSlider("AimSmoothnessY", {
 		Text = "Smoothness (Y)",
@@ -64,12 +65,13 @@ local function BuildMenu()
 		Min = 0,
 		Max = 100,
 		Rounding = 1,
+		Compact = true,
 	})
 
 	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
 
 	AimbotMain:AddSlider("AimMultipointScale", {
-		Text = "Multipoint Scale (%)",
+		Text = "Multipoint Scale",
 		Default = Flags.Aimbot.MultipointScale,
 		Min = 0,
 		Max = 100,
@@ -100,6 +102,8 @@ local function BuildMenu()
 		Min = 1,
 		Max = 500,
 		Rounding = 1,
+		Suffix = "°",
+		Compact = true,
 	})
 
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
@@ -123,6 +127,8 @@ local function BuildMenu()
 		Min = 1,
 		Max = 500,
 		Rounding = 1,
+		Suffix = "°",
+		Compact = true,
 	})
 
 	AimbotMain:AddDivider()
@@ -133,6 +139,8 @@ local function BuildMenu()
 		Min = 1,
 		Max = 5000,
 		Rounding = 1,
+		Suffix = "m",
+		Compact = true,
 	})
 end
 
