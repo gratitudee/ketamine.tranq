@@ -75,8 +75,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 100,
 		Rounding = 1,
-		Prefix = "%",
-		-- Suffix = "%",
+		Suffix = "%",
 	})
 	AimbotMain:AddDivider()
 
