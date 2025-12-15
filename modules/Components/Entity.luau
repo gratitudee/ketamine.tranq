@@ -23,6 +23,10 @@ local PART_CORNERS = {
 
 -- helper funcs
 local function FireCallback(Event, EntityObject, ...)
+	if EntityObject == Entity:GetLocalPlayer() then
+		return
+	end
+
 	for _, Callback in pairs(Entity.Callbacks[Event]) do
 		task.spawn(Callback, EntityObject, ...)
 	end
@@ -343,6 +347,10 @@ end
 function Entity:GetPlayers(OnlyEnemies)
 	local Result = {}
 	for _, EntityObject in pairs(self.Entities) do
+		if EntityObject == Entity:GetLocalPlayer() then
+			continue
+		end
+
 		if not OnlyEnemies or EntityObject.IsEnemy then
 			table.insert(Result, EntityObject)
 		end

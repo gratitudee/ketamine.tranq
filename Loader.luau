@@ -9,8 +9,8 @@ function Ketamine:Print(...)
 end
 
 function Ketamine:Notify(...)
-	if Ketamine and Ketamine.Library and not Ketamine.StreamMode then
-		Ketamine.Library:Notify(...)
+	if self.Library and Flags and (not Flags.Settings.StreamMode or not self.StreamMode) then
+		self.Library:Notify(...)
 	end
 end
 
