@@ -136,19 +136,19 @@ return function(Options: {
 				Description = "Unloading Cheat",
 			})
 
-			-- Unload Dependencies
-			Ketamine:SecureSpawn(Entity.Unload, Entity)
-			Ketamine:SecureSpawn(Draw.Unload, Draw)
-			Ketamine:SecureSpawn(Cheat.Unload, Cheat)
+			task.delay(0.5, function()
+				Ketamine:SecureSpawn(Entity.Unload, Entity)
+				Ketamine:SecureSpawn(Draw.Unload, Draw)
 
-			-- Unload Features
-			Ketamine:SecureSpawn(Aimbot.Unload, Aimbot)
-			Ketamine:SecureSpawn(Visuals.Unload, Visuals)
-			Ketamine:SecureSpawn(Settings.Unload, Settings)
-			Ketamine.Library:Unload()
+				-- Unload Features
+				Ketamine:SecureSpawn(Aimbot.Unload, Aimbot)
+				Ketamine:SecureSpawn(Visuals.Unload, Visuals)
+				Ketamine:SecureSpawn(Settings.Unload, Settings)
 
-			task.delay(1, function()
-				getgenv().Ketamine = nil
+				task.delay(1, function()
+					Ketamine.Library:Unload()
+					getgenv().Ketamine = nil
+				end)
 			end)
 		end)
 
