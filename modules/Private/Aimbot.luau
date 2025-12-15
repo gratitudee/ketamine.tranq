@@ -1,3 +1,4 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -7,9 +8,38 @@ local function BuildMenu()
 	local AimbotMain = AimbotTabBox:AddTab("Main")
 	local AimbotSettings = AimbotTabBox:AddTab("Settings")
 
-	-- Main
+	-- Aimbot Main
+	AimbotMain:AddToggle("AimEnabled", {
+		Text = "Enabled",
+		Default = Flags.Aimbot.Enabled,
+	}):AddKeyPicker("AimKeybind", {
+		Mode = "Hold",
+		Text = "Aimbot",
+	})
 
-	-- Settings
+	AimbotMain:AddToggle("DrawAimFOV", {
+		Text = "Draw FOV",
+		Default = Flags.Aimbot.DrawFOV,
+	})
+	AimbotMain:AddSlider("AimFOV", {
+		Text = "Field Of View",
+		Default = Flags.Aimbot.FieldOfView,
+		Min = 1,
+		Max = 500,
+		Rounding = 1,
+	})
+	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
+		Text = "Draw FOV",
+		Default = Flags.Aimbot.DrawDeadzone,
+	})
+	AimbotMain:AddSlider("AimDeadzoneFOV", {
+		Text = "Deadzone Field Of View",
+		Default = Flags.Aimbot.DeadzoneFieldOfView,
+		Min = 1,
+		Max = 500,
+		Rounding = 1,
+	})
+	-- Aimbot Settings
 	AimbotSettings:AddDropdown("AimMethod", {
 		Values = { "Mouse", "Camera" },
 		Default = Flags.Aimbot.AimMethod,
@@ -29,10 +59,19 @@ local function BuildMenu()
 	})
 
 	AimbotSettings:AddDropdown("AimChecks", {
-		Values = { "Invisible", "Visible", "Target Team" },
+		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
 		AllowNull = true,
 		Multi = true,
-		Default = nil,
+		Default = Flags.Aimbot.AimChecks,
+		Text = "Aim Checks",
+	})
+
+	AimbotSettings:AddSlider("AimMaxDistance", {
+		Text = "Max Distance",
+		Default = Flags.Aimbot.MaxDistance,
+		Min = 1,
+		Max = 5000,
+		Rounding = 1,
 	})
 end
 

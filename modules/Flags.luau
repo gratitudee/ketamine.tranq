@@ -1,8 +1,28 @@
 return {
 	Aimbot = {
+		Enabled = false,
+		KeybindHeld = false,
+
+		SmoothnessX = 50,
+		SmoothnessY = 50,
+
+		DrawFOV = false,
+		FieldOfView = 70,
+
+		DrawDeadzone = false,
+		DeadzoneFieldOfView = 0,
+
 		AimMethod = "Mouse",
 		AimStyle = "Linear",
 		AimTargetting = "Closest To Crosshair",
+		AimChecks = {
+			Forcefield = false,
+			["Local Dead"] = false,
+			Invisible = false,
+			Visible = false,
+			Team = true,
+		},
+		MaxDistance = 500,
 	},
 	Visuals = {},
 	Settings = {
