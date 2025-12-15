@@ -3,7 +3,7 @@ local Component = {}
 
 local function BuildMenu()
 	local Tab = Ketamine.Window:AddTab("Aimbot")
-	local AimbotTabBox = Tab:AddLeftTabBox()
+	local AimbotTabBox = Tab:AddLeftTabbox()
 	local AimbotMain = AimbotTabBox:AddTab("Main")
 	local AimbotSettings = AimbotTabBox:AddTab("Settings")
 
