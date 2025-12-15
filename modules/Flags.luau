@@ -9,6 +9,8 @@ return {
 			SmoothnessY = 50,
 		},
 
+		MultipointScale = 0,
+
 		FieldOfView = {
 			DrawingEnabled = false,
 			Degrees = 70,

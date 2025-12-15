@@ -1,3 +1,4 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -69,6 +70,15 @@ local function BuildMenu()
 
 	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
 
+	AimbotMain:AddSlider("AimMultipointScale", {
+		Text = "Multipoint Scale (%)",
+		Default = Flags.Aimbot.MultipointScale,
+		Min = 0,
+		Max = 100,
+		Rounding = 1,
+		Prefix = "%",
+		-- Suffix = "%",
+	})
 	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("DrawAimFOV", {
