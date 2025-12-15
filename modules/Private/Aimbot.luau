@@ -1,3 +1,4 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -21,11 +22,22 @@ local function BuildMenu()
 
 	AimbotMain:AddToggle("DrawAimFOV", {
 		Text = "Draw FOV",
-		Default = Flags.Aimbot.DrawFOV,
+		Default = Flags.Aimbot.FieldOfView.DrawingEnabled,
 	})
+		:AddColorPicker("FOVFillColor", {
+			Title = "FOV Fill Color",
+			Default = Flags.Aimbot.FieldOfView.Color.Fill.Color,
+			Transparency = Flags.Aimbot.FieldOfView.Color.Fill.Transparency,
+		})
+		:AddColorPicker("FOVOutlineColor", {
+			Title = "FOV Outline Color",
+			Default = Flags.Aimbot.FieldOfView.Color.Outline.Color,
+			Transparency = Flags.Aimbot.FieldOfView.Color.Outline.Transparency,
+		})
+
 	AimbotMain:AddSlider("AimFOV", {
 		Text = "Field Of View",
-		Default = Flags.Aimbot.FieldOfView,
+		Default = Flags.Aimbot.FieldOfView.Degrees,
 		Min = 1,
 		Max = 500,
 		Rounding = 1,
@@ -34,12 +46,23 @@ local function BuildMenu()
 	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
-		Text = "Draw FOV",
-		Default = Flags.Aimbot.DrawDeadzone,
+		Text = "Draw Deadzone",
+		Default = Flags.Aimbot.Deadzone.DrawingEnabled,
 	})
+		:AddColorPicker("DeadzoneFillColor", {
+			Title = "Deadzone Fill Color",
+			Default = Flags.Aimbot.Deadzone.Color.Fill.Color,
+			Transparency = Flags.Aimbot.Deadzone.Color.Fill.Transparency,
+		})
+		:AddColorPicker("DeadzoneOutlineColor", {
+			Title = "Deadzone Outline Color",
+			Default = Flags.Aimbot.Deadzone.Color.Outline.Color,
+			Transparency = Flags.Aimbot.Deadzone.Color.Outline.Transparency,
+		})
+
 	AimbotMain:AddSlider("AimDeadzoneFOV", {
-		Text = "Deadzone Field Of View",
-		Default = Flags.Aimbot.DeadzoneFieldOfView,
+		Text = "Field Of View",
+		Default = Flags.Aimbot.Deadzone.Degrees,
 		Min = 1,
 		Max = 500,
 		Rounding = 1,

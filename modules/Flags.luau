@@ -6,11 +6,35 @@ return {
 		SmoothnessX = 50,
 		SmoothnessY = 50,
 
-		DrawFOV = false,
-		FieldOfView = 70,
+		FieldOfView = {
+			DrawingEnabled = false,
+			Degrees = 70,
+			Color = {
+				Fill = {
+					Color = Color3.new(1, 1, 1),
+					Transparency = 0.7,
+				},
+				Outline = {
+					Color = Color3.new(0, 0, 0),
+					Transparency = 0,
+				},
+			},
+		},
 
-		DrawDeadzone = false,
-		DeadzoneFieldOfView = 0,
+		Deadzone = {
+			DrawingEnabled = false,
+			Degrees = 0,
+			Color = {
+				Fill = {
+					Color = Color3.new(1, 1, 1),
+					Transparency = 0.7,
+				},
+				Outline = {
+					Color = Color3.new(0, 0, 0),
+					Transparency = 0,
+				},
+			},
+		},
 
 		AimMethod = "Mouse",
 		AimStyle = "Linear",
