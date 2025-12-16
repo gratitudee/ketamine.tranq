@@ -1,7 +1,7 @@
 return {
 	Aimbot = {
-		Enabled = false,
-		KeybindHeld = false,
+		AimEnabled = false,
+		AimKeybindActive = false,
 
 		Smoothness = {
 			Enabled = false,
