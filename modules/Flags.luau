@@ -2,6 +2,12 @@ return {
 	Aimbot = {
 		AimEnabled = false,
 		AimKeybindActive = false,
+		AimHitboxes = {
+			Head = false,
+			Torso = false,
+			Arms = false,
+			Legs = false,
+		},
 
 		Smoothness = {
 			Enabled = false,

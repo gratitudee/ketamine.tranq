@@ -20,8 +20,105 @@ local PART_CORNERS = {
 	Vector3.new(0, 1, -1),
 	Vector3.new(0, 1, 1),
 }
+local DEFAULT_STRUCT = {
+	["R6"] = {
+		["Head"] = "Head",
+		["Torso"] = "Torso",
+		["Arms"] = { "Left Arm", "Right Arm" },
+		["Legs"] = { "Left Leg", "Right Leg " },
+	},
+	["R15"] = {
+		["Head"] = "Head",
+		["Torso"] = { "UpperTorso", "LowerTorso" },
+		["Arms"] = { "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand" },
+		["Legs"] = { "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot" },
+	},
+}
 
 -- helper funcs
+local function GetRigType(Character)
+	if Character:FindFirstChild("UpperTorso") then
+		return "R15"
+	elseif Character:FindFirstChild("Torso") then
+		return "R6"
+	else
+		return "Custom"
+	end
+end
+
+local function GetBodyStruct(EntityObject, RigType)
+	if Ketamine.Support and Ketamine.Support.GetBodyStruct then
+		local customStruct = Ketamine.Support:GetBodyStruct(EntityObject)
+		if customStruct then
+			return customStruct
+		end
+	end
+
+	if RigType == "R6" or RigType == "R15" then
+		return DEFAULT_STRUCT[RigType]
+	end
+
+	local fullBody = {}
+	for _, part in ipairs(EntityObject.Character:GetChildren()) do
+		if part:IsA("BasePart") then
+			fullBody[part.Name] = part.Name
+		end
+	end
+	return fullBody
+end
+
+local function ResolveBodyStruct(EntityObject)
+	local Character = EntityObject.Character
+	if not Character then
+		return nil
+	end
+
+	local rig = GetRigType(Character)
+	local struct = GetBodyStruct(EntityObject, rig)
+
+	local GroupedBody = {}
+	if struct and next(struct) then
+		for group, names in pairs(struct) do
+			GroupedBody[group] = {}
+			if type(names) == "string" then
+				local part = Character:FindFirstChild(names)
+				if part then
+					table.insert(GroupedBody[group], part)
+				end
+			elseif type(names) == "table" then
+				for _, name in ipairs(names) do
+					local part = Character:FindFirstChild(name)
+					if part then
+						table.insert(GroupedBody[group], part)
+					end
+				end
+			end
+		end
+	end
+
+	if not next(GroupedBody) then
+		GroupedBody["All"] = {}
+		for _, part in ipairs(Character:GetChildren()) do
+			if part:IsA("BasePart") then
+				table.insert(GroupedBody["All"], part)
+			end
+		end
+	end
+
+	return GroupedBody
+end
+
+local function UpdateBody(EntityObject)
+	local Tmp = {}
+	for _, child in ipairs(EntityObject.Character:GetChildren()) do
+		if child:IsA("BasePart") then
+			table.insert(Tmp, child)
+		end
+	end
+	EntityObject.Bones = Tmp
+	EntityObject.AimParts = ResolveBodyStruct(EntityObject)
+end
+
 local function FireCallback(Event, EntityObject, ...)
 	if EntityObject == Entity:GetLocalPlayer() then
 		return
@@ -175,12 +272,8 @@ function EntityMethods:Update()
 
 	if OldHealth and self.Health < OldHealth then
 		local Damage = OldHealth - self.Health
-
-		if self.Health <= 0 then
-			FireCallback("Killed", self)
-		elseif self.IsAimbotTarget then
+		if self.IsAimbotTarget then
 			FireCallback("Hit", self, Damage)
-			self.IsAimbotTarget = false
 		end
 	end
 
@@ -230,7 +323,8 @@ function Entity:AddModel(Key, Data)
 		StaticHealth = Data.Health,
 		MaxHealthValue = Data.MaxHealth,
 		IsAimbotTarget = false,
-		Bones = {},
+		Bones = {}, -- bbox
+		AimParts = {},
 		Connections = {},
 
 		Name = Data.Name,
@@ -250,28 +344,33 @@ function Entity:AddModel(Key, Data)
 		BoundingBox = nil,
 	}, EntityMethods)
 
-	for _, Child in ipairs(EntityObject.Character:GetChildren()) do
-		if Child:IsA("BasePart") then
-			table.insert(EntityObject.Bones, Child)
-		end
+	UpdateBody(EntityObject)
+	if EntityObject.Humanoid then
+		table.insert(
+			EntityObject.Connections,
+			EntityObject.Humanoid.Died:Connect(function(...)
+				FireCallback("Killed", EntityObject)
+			end)
+		)
 	end
-
 	table.insert(
 		EntityObject.Connections,
-		EntityObject.Character.ChildAdded:Connect(function(Child)
-			if Child:IsA("BasePart") then
-				table.insert(EntityObject.Bones, Child)
+		EntityObject.Character.ChildAdded:Connect(function(child)
+			if child:IsA("BasePart") then
+				table.insert(EntityObject.Bones, child)
+				UpdateBody(EntityObject)
 			end
 		end)
 	)
 
 	table.insert(
 		EntityObject.Connections,
-		EntityObject.Character.ChildRemoved:Connect(function(Child)
-			if Child:IsA("BasePart") then
-				local Index = table.find(EntityObject.Bones, Child)
-				if Index then
-					table.remove(EntityObject.Bones, Index)
+		EntityObject.Character.ChildRemoved:Connect(function(child)
+			if child:IsA("BasePart") then
+				local idx = table.find(EntityObject.Bones, child)
+				if idx then
+					table.remove(EntityObject.Bones, idx)
+					UpdateBody(EntityObject)
 				end
 			end
 		end)

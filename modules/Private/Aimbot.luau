@@ -2,22 +2,32 @@ local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
 local function BuildMenu()
-	local function BindToggle(id, path)
-		Toggles[id]:OnChanged(function()
-			path = Toggles[id].Value
+	local function BindToggle(id, tbl, key)
+		if not tbl[key] then
+			print(`UI ERROR | Failed to bind {key}, key not found.`)
+			return
+		end
+
+		Toggles[id]:OnChanged(function(v)
+			tbl[key] = v
 		end)
 	end
 
-	local function BindOption(id, path)
-		Options[id]:OnChanged(function()
-			path = Options[id].Value
+	local function BindOption(id, tbl, key)
+		if not tbl[key] then
+			print(`UI ERROR | Failed to bind {key}, key not found.`)
+			return
+		end
+		Options[id]:OnChanged(function(v)
+			tbl[key] = v
 		end)
 	end
 
-	local function BindMultiselect(id, path)
+	local function BindMultiselect(id, tbl)
 		Options[id]:OnChanged(function()
-			for flag, _ in pairs(path) do
-				path[flag] = Options[id].Value[flag] == true
+			local values = Options[id].Value
+			for k in pairs(tbl) do
+				tbl[k] = values[k] == true
 			end
 		end)
 	end
@@ -50,7 +60,7 @@ local function BuildMenu()
 		Text = "Aimbot",
 		Default = "MB1",
 	})
-	BindToggle("AimEnabled", Flags.Aimbot.AimEnabled)
+	BindToggle("AimEnabled", Flags.Aimbot, "AimEnabled")
 	BindKeybind("AimKeybind", function(State)
 		Flags.Aimbot.AimKeybindActive = State
 	end)
@@ -68,14 +78,14 @@ local function BuildMenu()
 		Text = "Sticky Aim",
 		Default = Flags.Aimbot.StickyAim.Enabled,
 	})
-	BindToggle("AimStickyEnabled", Flags.Aimbot.StickyAim.Enabled)
+	BindToggle("AimStickyEnabled", Flags.Aimbot.StickyAim, "Enabled")
 	local StickyAimDependencyBox = AimbotMain:AddDependencyBox()
 	StickyAimDependencyBox:AddDropdown("StickyAimMethod", {
 		Values = { "Weak", "Strong" },
 		Default = Flags.Aimbot.StickyAim.Method,
 		Text = "Sticky Aim Method",
 	})
-	BindOption("StickyAimMethod", Flags.Aimbot.StickyAim.Method)
+	BindOption("StickyAimMethod", Flags.Aimbot.StickyAim, "Method")
 	StickyAimDependencyBox:SetupDependencies({ { Toggles.AimStickyEnabled, true } })
 
 	AimbotMain:AddDivider()
@@ -85,21 +95,21 @@ local function BuildMenu()
 		Default = Flags.Aimbot.AimMethod,
 		Text = "Aim Method",
 	})
-	BindOption("AimMethod", Flags.Aimbot.AimMethod)
+	BindOption("AimMethod", Flags.Aimbot, "AimMethod")
 
 	AimbotMain:AddDropdown("AimStyle", {
 		Values = { "Linear", "Exponential", "Spring" },
 		Default = Flags.Aimbot.AimStyle,
 		Text = "Aim Easing",
 	})
-	BindOption("AimStyle", Flags.Aimbot.AimStyle)
+	BindOption("AimStyle", Flags.Aimbot, "AimStyle")
 
 	AimbotMain:AddDropdown("AimPriority", {
 		Values = { "Closest To Crosshair", "Closest To Player", "Lowest HP", "Highest HP" },
 		Default = Flags.Aimbot.AimTargetting,
 		Text = "Aim Priority",
 	})
-	BindOption("AimPriority", Flags.Aimbot.AimTargetting)
+	BindOption("AimPriority", Flags.Aimbot, "AimTargetting")
 
 	AimbotMain:AddDropdown("AimChecks", {
 		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
@@ -110,13 +120,22 @@ local function BuildMenu()
 	})
 	BindMultiselect("AimChecks", Flags.Aimbot.AimChecks)
 
+	AimbotMain:AddDropdown("AimHitboxes", {
+		Values = { "Head", "Torso", "Arms", "Legs" },
+		AllowNull = true,
+		Multi = true,
+		Default = Flags.Aimbot.AimHitboxes,
+		Text = "Aim Hitboxes",
+	})
+	BindMultiselect("AimHitboxes", Flags.Aimbot.AimHitboxes)
+
 	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("SmoothnessEnabled", {
 		Text = "Smoothness",
 		Default = Flags.Aimbot.Smoothness.Enabled,
 	})
-	BindToggle("SmoothnessEnabled", Flags.Aimbot.Smoothness.Enabled)
+	BindToggle("SmoothnessEnabled", Flags.Aimbot.Smoothness, "Enabled")
 
 	local SmoothnessDependency = AimbotMain:AddDependencyBox()
 	SmoothnessDependency:AddSlider("AimSmoothnessX", {
@@ -135,8 +154,8 @@ local function BuildMenu()
 		Rounding = 1,
 		Compact = false,
 	})
-	BindOption("AimSmoothnessX", Flags.Aimbot.Smoothness.SmoothnessX)
-	BindOption("AimSmoothnessY", Flags.Aimbot.Smoothness.SmoothnessY)
+	BindOption("AimSmoothnessX", Flags.Aimbot.Smoothness, "SmoothnessX")
+	BindOption("AimSmoothnessY", Flags.Aimbot.Smoothness, "SmoothnessY")
 
 	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
 
@@ -144,7 +163,7 @@ local function BuildMenu()
 		Text = "Prediction",
 		Default = Flags.Aimbot.Prediction.Enabled,
 	})
-	BindToggle("PredictionEnabled", Flags.Aimbot.Prediction.Enabled)
+	BindToggle("PredictionEnabled", Flags.Aimbot.Prediction, "Enabled")
 
 	local PredictionDependency = AimbotMain:AddDependencyBox()
 	PredictionDependency:AddDropdown("PredictionMode", {
@@ -152,7 +171,7 @@ local function BuildMenu()
 		Values = { "Manual", "Automatic" },
 		Default = Flags.Aimbot.Prediction.Mode,
 	})
-	BindOption("PredictionMode", Flags.Aimbot.Prediction.Mode)
+	BindOption("PredictionMode", Flags.Aimbot.Prediction, "Mode")
 
 	PredictionDependency:SetupDependencies({ { Toggles.PredictionEnabled, true } })
 
@@ -174,8 +193,8 @@ local function BuildMenu()
 		Rounding = 1,
 		Compact = false,
 	})
-	BindOption("ManualPredictionX", Flags.Aimbot.Prediction.PredictionX)
-	BindOption("ManualPredictionY", Flags.Aimbot.Prediction.PredictionY)
+	BindOption("ManualPredictionX", Flags.Aimbot.Prediction, "PredictionX")
+	BindOption("ManualPredictionY", Flags.Aimbot.Prediction, "PredictionY")
 
 	SubPredictionDependency:SetupDependencies({ { Options.PredictionMode, "Manual" } })
 
@@ -188,7 +207,7 @@ local function BuildMenu()
 		Suffix = "%",
 		Compact = false,
 	})
-	BindOption("AimMultipointScale", Flags.Aimbot.MultipointScale)
+	BindOption("AimMultipointScale", Flags.Aimbot, "MultipointScale")
 
 	AimbotMain:AddDivider()
 
@@ -215,7 +234,7 @@ local function BuildMenu()
 		Suffix = "°",
 		Compact = false,
 	})
-	BindToggle("DrawAimFOV", Flags.Aimbot.FieldOfView.DrawingEnabled)
+	BindToggle("DrawAimFOV", Flags.Aimbot.FieldOfView, "DrawingEnabled")
 	BindColorPicker("FOVFillColor", function(Color, Transparency)
 		local Fill = Flags.Aimbot.FieldOfView.Color.Fill
 		Fill.Color = Color
@@ -230,7 +249,7 @@ local function BuildMenu()
 			Outline.Transparency = Transparency
 		end
 	end)
-	BindOption("AimFOV", Flags.Aimbot.FieldOfView.Degrees)
+	BindOption("AimFOV", Flags.Aimbot.FieldOfView, "Degrees")
 
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
 		Text = "Draw Deadzone",
@@ -255,7 +274,7 @@ local function BuildMenu()
 		Suffix = "°",
 		Compact = false,
 	})
-	BindToggle("DrawAimDeadzoneFOV", Flags.Aimbot.Deadzone.DrawingEnabled)
+	BindToggle("DrawAimDeadzoneFOV", Flags.Aimbot.Deadzone, "DrawingEnabled")
 	BindColorPicker("DeadzoneFillColor", function(Color, Transparency)
 		local Fill = Flags.Aimbot.Deadzone.Color.Fill
 		Fill.Color = Color
@@ -270,7 +289,7 @@ local function BuildMenu()
 			Outline.Transparency = Transparency
 		end
 	end)
-	BindOption("AimDeadzoneFOV", Flags.Aimbot.Deadzone.Degrees)
+	BindOption("AimDeadzoneFOV", Flags.Aimbot.Deadzone, "Degrees")
 
 	AimbotMain:AddDivider()
 
@@ -283,7 +302,7 @@ local function BuildMenu()
 		Suffix = "m",
 		Compact = false,
 	})
-	BindOption("AimMaxDistance", Flags.Aimbot.MaxDistance)
+	BindOption("AimMaxDistance", Flags.Aimbot, "MaxDistance")
 end
 
 function Component:Load()
