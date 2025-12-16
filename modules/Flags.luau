@@ -9,6 +9,13 @@ return {
 			SmoothnessY = 50,
 		},
 
+		Prediction = {
+			Enabled = false,
+			Mode = "Automatic",
+			PredictionX = 0,
+			PredictionY = 0,
+		},
+
 		MultipointScale = 0,
 
 		FieldOfView = {

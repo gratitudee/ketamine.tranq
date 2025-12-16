@@ -1,3 +1,4 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -79,6 +80,42 @@ local function BuildMenu()
 		Suffix = "%",
 		Compact = true,
 	})
+
+	AimbotMain:AddToggle("PredictionEnabled", {
+		Text = "Prediction",
+		Default = Flags.Aimbot.Prediction.Enabled,
+	})
+
+	local PredictionDependency = AimbotMain:AddDependencyBox()
+	PredictionDependency:AddDropdown("PredictionMode", {
+		Text = "Prediction Mode",
+		Values = { "Manual", "Automatic" },
+		Default = Flags.Aimbot.Prediction.Mode,
+	})
+
+	PredictionDependency:SetupDependencies({ { Toggles.PredictionEnabled, true } })
+
+	local SubPredictionDependency = PredictionDependency:AddDependencyBox()
+	SubPredictionDependency:AddSlider("ManualPredictionX", {
+		Text = "Predict (X)",
+		Default = Flags.Aimbot.Prediction.PredictionX,
+		Min = 0,
+		Max = 10,
+		Rounding = 1,
+		Compact = true,
+	})
+
+	SubPredictionDependency:AddSlider("ManualPredictionY", {
+		Text = "Predict (Y)",
+		Default = Flags.Aimbot.Prediction.PredictionY,
+		Min = 0,
+		Max = 10,
+		Rounding = 1,
+		Compact = true,
+	})
+
+	SubPredictionDependency:SetupDependencies({ { Options.PredictionMode, "Manual" } })
+
 	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("DrawAimFOV", {
