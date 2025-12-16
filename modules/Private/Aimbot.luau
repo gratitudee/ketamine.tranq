@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -307,6 +308,10 @@ end
 
 function Component:Load()
 	BuildMenu()
+
+	Cheat:Connect(RunService.Heartbeat, function()
+		print(Flags.Aimbot.MaxDistance)
+	end)
 end
 function Component:Unload() end
 
