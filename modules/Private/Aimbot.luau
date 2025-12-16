@@ -69,7 +69,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 100,
 		Rounding = 1,
-		Compact = true,
+		Compact = false,
 	})
 	SmoothnessDependency:AddSlider("AimSmoothnessY", {
 		Text = "Smoothness (Y)",
@@ -77,7 +77,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 100,
 		Rounding = 1,
-		Compact = true,
+		Compact = false,
 	})
 
 	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
@@ -89,7 +89,7 @@ local function BuildMenu()
 		Max = 100,
 		Rounding = 1,
 		Suffix = "%",
-		Compact = true,
+		Compact = false,
 	})
 
 	AimbotMain:AddToggle("PredictionEnabled", {
@@ -113,7 +113,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 10,
 		Rounding = 1,
-		Compact = true,
+		Compact = false,
 	})
 
 	SubPredictionDependency:AddSlider("ManualPredictionY", {
@@ -122,7 +122,7 @@ local function BuildMenu()
 		Min = 0,
 		Max = 10,
 		Rounding = 1,
-		Compact = true,
+		Compact = false,
 	})
 
 	SubPredictionDependency:SetupDependencies({ { Options.PredictionMode, "Manual" } })
@@ -151,7 +151,7 @@ local function BuildMenu()
 		Max = 500,
 		Rounding = 1,
 		Suffix = "°",
-		Compact = true,
+		Compact = false,
 	})
 
 	AimbotMain:AddToggle("DrawAimDeadzoneFOV", {
@@ -176,7 +176,7 @@ local function BuildMenu()
 		Max = 500,
 		Rounding = 1,
 		Suffix = "°",
-		Compact = true,
+		Compact = false,
 	})
 
 	AimbotMain:AddDivider()
@@ -188,7 +188,7 @@ local function BuildMenu()
 		Max = 5000,
 		Rounding = 1,
 		Suffix = "m",
-		Compact = true,
+		Compact = false,
 	})
 end
 
