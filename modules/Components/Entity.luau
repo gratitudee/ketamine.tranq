@@ -353,6 +353,7 @@ function Entity:AddModel(Key, Data)
 			end)
 		)
 	end
+
 	table.insert(
 		EntityObject.Connections,
 		EntityObject.Character.ChildAdded:Connect(function(child)

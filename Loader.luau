@@ -148,6 +148,10 @@ return function(Options: {
 				task.delay(1, function()
 					Ketamine.Library:Unload()
 					getgenv().Ketamine = nil
+					getgenv().Entity = nil
+					getgenv().Draw = nil
+					getgenv().Cheat = nil
+					getgenv().Flags = nil
 				end)
 			end)
 		end)

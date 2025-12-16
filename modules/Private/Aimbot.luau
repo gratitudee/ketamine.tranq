@@ -1,4 +1,4 @@
-local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
+local Options, Toggles, Flags = Ketamine.Library.Options, Ketamine.Library.Toggles, Flags
 local Component = {}
 
 local function BuildMenu()
