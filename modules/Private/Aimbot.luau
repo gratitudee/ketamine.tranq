@@ -18,7 +18,7 @@ local function BuildMenu()
 		Text = "Aimbot",
 		Default = "MB1",
 	})
-	AimKey:OnClick(function(state)
+	Options.AimKeybind:OnClick(function(state)
 		Flags.Aimbot.AimKeybindActive = state
 	end)
 	-- TODO: ADD UNIVERSAL KEYBIND MANAGER FOR HOLD/ALWAYS KEYPCIKERS
