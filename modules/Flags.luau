@@ -16,6 +16,11 @@ return {
 			PredictionY = 0,
 		},
 
+		StickyAim = {
+			Enabled = false,
+			Method = "Strong",
+		},
+
 		MultipointScale = 0,
 
 		FieldOfView = {

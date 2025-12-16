@@ -1,9 +1,11 @@
+local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
 local function BuildMenu()
 	local Tab = Ketamine.Window:AddTab("Aimbot")
 	local AimbotMain = Tab:AddLeftGroupbox("Assist")
+	local AimbotGlobals = Tab:AddLeftGroupbox("Globals")
 
 	-- Aimbot Main
 	AimbotMain:AddToggle("AimEnabled", {
@@ -13,34 +15,6 @@ local function BuildMenu()
 		Mode = "Hold",
 		Text = "Aimbot",
 		Default = "MB1",
-	})
-
-	AimbotMain:AddDivider()
-
-	AimbotMain:AddDropdown("AimMethod", {
-		Values = { "Mouse", "Camera" },
-		Default = Flags.Aimbot.AimMethod,
-		Text = "Aim Method",
-	})
-
-	AimbotMain:AddDropdown("AimStyle", {
-		Values = { "Linear", "Exponential", "Spring" },
-		Default = Flags.Aimbot.AimStyle,
-		Text = "Aim Easing",
-	})
-
-	AimbotMain:AddDropdown("AimPriority", {
-		Values = { "Closest To Crosshair", "Closest To Player", "Lowest HP", "Highest HP" },
-		Default = Flags.Aimbot.AimTargetting,
-		Text = "Aim Priority",
-	})
-
-	AimbotMain:AddDropdown("AimChecks", {
-		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
-		AllowNull = true,
-		Multi = true,
-		Default = Flags.Aimbot.AimChecks,
-		Text = "Aim Checks",
 	})
 
 	AimbotMain:AddDivider()
@@ -177,6 +151,44 @@ local function BuildMenu()
 		Rounding = 1,
 		Suffix = "m",
 		Compact = true,
+	})
+
+	-- Aimbot Globals
+	AimbotGlobals:AddDropdown("AimMethod", {
+		Values = { "Mouse", "Camera" },
+		Default = Flags.Aimbot.AimMethod,
+		Text = "Aim Method",
+	})
+
+	AimbotGlobals:AddDropdown("AimStyle", {
+		Values = { "Linear", "Exponential", "Spring" },
+		Default = Flags.Aimbot.AimStyle,
+		Text = "Aim Easing",
+	})
+
+	AimbotGlobals:AddDropdown("AimPriority", {
+		Values = { "Closest To Crosshair", "Closest To Player", "Lowest HP", "Highest HP" },
+		Default = Flags.Aimbot.AimTargetting,
+		Text = "Aim Priority",
+	})
+
+	AimbotGlobals:AddDropdown("AimChecks", {
+		Values = { "Forcefield", "Local Dead", "Invisible", "Visible", "Team" },
+		AllowNull = true,
+		Multi = true,
+		Default = Flags.Aimbot.AimChecks,
+		Text = "Aim Checks",
+	})
+
+	AimbotGlobals:AddToggle("AimStickyEnabled", {
+		Text = "Sticky Aim",
+		Default = Flags.Aimbot.StickyAim.Enabled,
+	})
+	local StickyAimDependencyBox = AimbotGlobals:AddDependencyBox()
+	StickyAimDependencyBox:AddDropdown("StickyAimMethod", {
+		Values = { "Weak", "Strong" },
+		Default = Flags.Aimbot.StickyAim.Method,
+		Text = "Sticky Aim Method",
 	})
 end
 
