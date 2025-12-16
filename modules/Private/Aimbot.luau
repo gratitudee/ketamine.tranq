@@ -55,7 +55,10 @@ local function BuildMenu()
 		Flags.Aimbot.AimKeybindActive = State
 	end)
 	task.spawn(function()
-		while not Ketamine.Library.Unloaded do
+		while true do
+			if not Ketamine or not Ketamine.Library or Ketamine.Library.Unloaded then
+				break
+			end
 			Flags.Aimbot.AimKeybindActive = Options.AimKeybind:GetState()
 			task.wait()
 		end
