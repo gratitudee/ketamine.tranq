@@ -190,6 +190,7 @@ local function BuildMenu()
 		Default = Flags.Aimbot.FieldOfView.Degrees,
 		Min = 0,
 		Max = 500,
+		Rounding = 1,
 	})
 	FOVSlider:OnChanged(function(value)
 		Flags.Aimbot.FieldOfView.Degrees = value
@@ -228,6 +229,7 @@ local function BuildMenu()
 		Default = Flags.Aimbot.Deadzone.Degrees,
 		Min = 0,
 		Max = 500,
+		Rounding = 1,
 	})
 	DeadzoneSlider:OnChanged(function(value)
 		Flags.Aimbot.Deadzone.Degrees = value
