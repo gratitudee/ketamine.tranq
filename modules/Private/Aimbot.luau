@@ -3,7 +3,7 @@ local Component = {}
 
 local function BuildMenu()
 	local function BindToggle(id, tbl, key)
-		if not tbl[key] then
+		if tbl[key] == nil then
 			print(`UI ERROR | Failed to bind {key}, key not found.`)
 			return
 		end
@@ -14,7 +14,7 @@ local function BuildMenu()
 	end
 
 	local function BindOption(id, tbl, key)
-		if not tbl[key] then
+		if tbl[key] == nil then
 			print(`UI ERROR | Failed to bind {key}, key not found.`)
 			return
 		end
