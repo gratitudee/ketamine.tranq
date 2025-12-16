@@ -10,6 +10,7 @@ local function BuildMenu()
 		Default = Flags.Aimbot.AimEnabled,
 	})
 	AimToggle:OnChanged(function(value)
+		print("this got changed!", value)
 		Flags.Aimbot.AimEnabled = value
 	end)
 
