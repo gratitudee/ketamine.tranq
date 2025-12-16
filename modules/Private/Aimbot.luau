@@ -1,4 +1,3 @@
-local Flags = require("../Flags")
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
