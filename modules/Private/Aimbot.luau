@@ -3,14 +3,14 @@ local Component = {}
 
 local function BuildMenu()
 	local function BindToggle(id, path)
-		Toggles[id]:OnChanged(function(v)
-			path.Enabled = v
+		Toggles[id]:OnChanged(function()
+			path = Toggles[id].Value
 		end)
 	end
 
 	local function BindOption(id, path)
-		Options[id]:OnChanged(function(v)
-			path = v
+		Options[id]:OnChanged(function()
+			path = Options[id].Value
 		end)
 	end
 
