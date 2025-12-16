@@ -44,6 +44,8 @@ local function BuildMenu()
 		Flags.Aimbot.StickyAim.Method = value
 	end)
 
+	AimbotMain:AddDivider()
+
 	local AimMethod = AimbotMain:AddDropdown("AimMethod", {
 		Values = { "Mouse", "Camera" },
 		Default = Flags.Aimbot.AimMethod,
@@ -98,6 +100,8 @@ local function BuildMenu()
 			Flags.Aimbot.AimHitboxes[k] = values[k] == true
 		end
 	end)
+
+	AimbotMain:AddDivider()
 
 	local SmoothToggle = AimbotMain:AddToggle("SmoothnessEnabled", {
 		Text = "Smoothness",
@@ -180,6 +184,8 @@ local function BuildMenu()
 		Flags.Aimbot.MultipointScale = value
 	end)
 
+	AimbotMain:AddDivider()
+
 	local FOVToggle = AimbotMain:AddToggle("DrawAimFOV", {
 		Text = "Draw FOV",
 		Default = Flags.Aimbot.FieldOfView.DrawingEnabled,
@@ -257,6 +263,8 @@ local function BuildMenu()
 		Flags.Aimbot.Deadzone.Color.Outline.Color = color
 		Flags.Aimbot.Deadzone.Color.Outline.Transparency = trans
 	end)
+
+	AimbotMain:AddDivider()
 
 	local MaxDistance = AimbotMain:AddSlider("AimMaxDistance", {
 		Text = "Max Distance",
