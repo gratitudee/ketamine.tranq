@@ -19,6 +19,9 @@ local function BuildMenu()
 		Text = "Aimbot",
 		Default = "MB1",
 	})
+	for i, v in pairs(AimKey) do
+		print(i, v)
+	end
 	Options.AimKeybind:OnClick(function(state)
 		Flags.Aimbot.AimKeybindActive = state
 	end)
