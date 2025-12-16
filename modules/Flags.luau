@@ -33,7 +33,7 @@ return {
 				},
 				Outline = {
 					Color = Color3.new(0, 0, 0),
-					Transparency = 0,
+					Transparency = 0.35,
 				},
 			},
 		},
@@ -43,12 +43,12 @@ return {
 			Degrees = 0,
 			Color = {
 				Fill = {
-					Color = Color3.new(1, 1, 1),
+					Color = Color3.new(1, 0, 0),
 					Transparency = 0.7,
 				},
 				Outline = {
 					Color = Color3.new(0, 0, 0),
-					Transparency = 0,
+					Transparency = 0.35,
 				},
 			},
 		},

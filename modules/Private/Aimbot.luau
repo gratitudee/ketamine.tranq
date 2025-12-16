@@ -82,16 +82,6 @@ local function BuildMenu()
 
 	SmoothnessDependency:SetupDependencies({ { Toggles.SmoothnessEnabled, true } })
 
-	AimbotMain:AddSlider("AimMultipointScale", {
-		Text = "Multipoint Scale",
-		Default = Flags.Aimbot.MultipointScale,
-		Min = 0,
-		Max = 100,
-		Rounding = 1,
-		Suffix = "%",
-		Compact = false,
-	})
-
 	AimbotMain:AddToggle("PredictionEnabled", {
 		Text = "Prediction",
 		Default = Flags.Aimbot.Prediction.Enabled,
@@ -127,6 +117,16 @@ local function BuildMenu()
 
 	SubPredictionDependency:SetupDependencies({ { Options.PredictionMode, "Manual" } })
 
+	AimbotMain:AddSlider("AimMultipointScale", {
+		Text = "Multipoint Scale",
+		Default = Flags.Aimbot.MultipointScale,
+		Min = 0,
+		Max = 100,
+		Rounding = 1,
+		Suffix = "%",
+		Compact = false,
+	})
+
 	AimbotMain:AddDivider()
 
 	AimbotMain:AddToggle("DrawAimFOV", {
@@ -147,7 +147,7 @@ local function BuildMenu()
 	AimbotMain:AddSlider("AimFOV", {
 		Text = "Field Of View",
 		Default = Flags.Aimbot.FieldOfView.Degrees,
-		Min = 1,
+		Min = 0,
 		Max = 500,
 		Rounding = 1,
 		Suffix = "°",
@@ -172,7 +172,7 @@ local function BuildMenu()
 	AimbotMain:AddSlider("AimDeadzoneFOV", {
 		Text = "Field Of View",
 		Default = Flags.Aimbot.Deadzone.Degrees,
-		Min = 1,
+		Min = 0,
 		Max = 500,
 		Rounding = 1,
 		Suffix = "°",
