@@ -66,6 +66,10 @@ return function(Options: {
 			return
 		end
 
+		if not Ketamine then -- this is so luau lsp shuts up
+			return
+		end
+
 		Ketamine.Repo = "https://raw.githubusercontent.com/gratitudee/ketamine.tranq/refs/heads/main/"
 		Ketamine.IsLoaded = true
 		Ketamine.StreamMode = Options and Options.StreamMode or false

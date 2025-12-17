@@ -13,7 +13,7 @@ local Entity = {
 	GlobalConnections = {},
 }
 
--- Constants
+-- constnats
 local PART_CORNERS = {
 	Vector3.new(0, -1, -1),
 	Vector3.new(0, -1, 1),
