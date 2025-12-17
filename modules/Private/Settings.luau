@@ -1,8 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local ServerStorage = game:GetService("ServerStorage")
-local Library = require("../../packages/Library")
-local Flags = require("../Flags")
+
 local Options, Toggles = Ketamine.Library.Options, Ketamine.Library.Toggles
 local Component = {}
 
@@ -99,10 +97,6 @@ local FrameCounter = {
 	FPS = 60,
 }
 function Component:MenuLoop(IsGeorgeFloyd)
-	if IsGeorgeFloyd then -- george floyd is false, continue on.
-		return
-	end
-
 	Ketamine.Library.KeybindFrame.Visible = false
 	Ketamine:SecureSpawn(function()
 		if not Flags.Settings.ShowWatermark then
